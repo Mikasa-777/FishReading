@@ -1,0 +1,61 @@
+<!-- Plugin Configuration File: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN, cannot be changed between the plugin versions. -->
+    <id>com.example.FishReading</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
+    <name>FishReading</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor url="https://www.yourcompany.com">YourCompany</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
+    <description><![CDATA[
+        Enter short description for your plugin here.<br>
+        <em>most HTML tags may be used</em>
+    ]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <actions>
+        <action id="com.example.fishreading.NextLineAction" class="com.example.fishreading.NextLineAction" text="Next Fish Line">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt RIGHT"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="control alt RIGHT"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control alt RIGHT"/>
+        </action>
+
+        <action id="com.example.fishreading.PrevLineAction" class="com.example.fishreading.PrevLineAction" text="Previous Fish Line">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt LEFT"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="control alt LEFT"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control alt LEFT"/>
+        </action>
+
+        <action id="com.example.fishreading.SelectChapterAction" class="com.example.fishreading.SelectChapterAction" text="Select Fish Chapter (Popup)">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt DOWN"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="control alt DOWN"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control alt DOWN"/>
+        </action>
+
+        <group id="com.example.fishreading.MainMenu" text="Fish Reading Master" popup="true">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+
+            <action id="com.example.fishreading.LoadEpubAction" class="com.example.fishreading.LoadEpubAction" text="Import New EPUB..."/>
+
+            <separator/>
+
+            <group id="com.example.fishreading.BookAndChapterMenu" class="com.example.fishreading.BookAndChapterMenuGroup" text="Books &amp; Chapters Menu"/>
+        </group>
+    </actions>
+
+    <resource-bundle>messages.MyMessageBundle</resource-bundle>
+    <!-- Extensions defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="MyToolWindow" factoryClass="com.example.fishreading.MyToolWindowFactory"
+                    icon="AllIcons.Toolwindows.ToolWindowPalette"/>
+    </extensions>
+</idea-plugin>
