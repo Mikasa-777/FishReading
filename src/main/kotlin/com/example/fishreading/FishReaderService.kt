@@ -66,7 +66,6 @@ class FishReaderService(private val project: Project) : Disposable {
     }
 
     fun getChapterTitles(): List<String> = chapters.mapIndexed { i, c -> "[${i + 1}] ${c.title}" }
-    fun getChapterTitlesRaw(): List<String> = chapters.map { it.title }
     fun getCurrentChapterIdx(): Int = currentChapterIdx
 
     fun jumpToChapter(index: Int) {

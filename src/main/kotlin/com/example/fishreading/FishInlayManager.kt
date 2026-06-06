@@ -3,7 +3,7 @@ package com.example.fishreading
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.markup.TextAttributes
-import java.awt.Color
+import com.intellij.ui.JBColor
 import java.awt.Font
 
 object FishInlayManager {
@@ -23,7 +23,7 @@ object FishInlayManager {
 
         // 2. 设置伪装字体的颜色（灰色斜体，高仿注释）
         val attributes = TextAttributes().apply {
-            foregroundColor = Color.GRAY
+            foregroundColor = JBColor.GRAY
             fontType = Font.ITALIC
         }
 

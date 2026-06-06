@@ -21,33 +21,40 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
 
+    <resource-bundle>messages.MyMessageBundle</resource-bundle>
+
     <actions>
-        <action id="com.example.fishreading.NextLineAction" class="com.example.fishreading.NextLineAction" text="Next Fish Line">
+        <action id="com.example.fishreading.NextLineAction"
+                class="com.example.fishreading.NextLineAction">
             <keyboard-shortcut keymap="$default" first-keystroke="alt RIGHT"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="control alt RIGHT"/>
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control alt RIGHT"/>
         </action>
 
-        <action id="com.example.fishreading.PrevLineAction" class="com.example.fishreading.PrevLineAction" text="Previous Fish Line">
+        <action id="com.example.fishreading.PrevLineAction"
+                class="com.example.fishreading.PrevLineAction">
             <keyboard-shortcut keymap="$default" first-keystroke="alt LEFT"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="control alt LEFT"/>
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control alt LEFT"/>
         </action>
 
-        <action id="com.example.fishreading.SelectChapterAction" class="com.example.fishreading.SelectChapterAction" text="Select Fish Chapter (Popup)">
+        <action id="com.example.fishreading.SelectChapterAction"
+                class="com.example.fishreading.SelectChapterAction">
             <keyboard-shortcut keymap="$default" first-keystroke="alt DOWN"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="control alt DOWN"/>
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control alt DOWN"/>
         </action>
 
-        <group id="com.example.fishreading.MainMenu" text="Fish Reading Master" popup="true">
+        <group id="com.example.fishreading.MainMenu" popup="true">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
 
-            <action id="com.example.fishreading.LoadEpubAction" class="com.example.fishreading.LoadEpubAction" text="Import New EPUB..."/>
+            <action id="com.example.fishreading.LoadEpubAction"
+                    class="com.example.fishreading.LoadEpubAction"/>
 
             <separator/>
 
-            <group id="com.example.fishreading.BookAndChapterMenu" class="com.example.fishreading.BookAndChapterMenuGroup" text="Books &amp; Chapters Menu"/>
+            <group id="com.example.fishreading.BookAndChapterMenu"
+                   class="com.example.fishreading.BookAndChapterMenuGroup"/>
         </group>
     </actions>
 

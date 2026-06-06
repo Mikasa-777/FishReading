@@ -10,7 +10,7 @@ import java.io.File
 class BookAndChapterMenuGroup : ActionGroup() {
 
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
-        val project = e?.project ?: return AnAction.EMPTY_ARRAY
+        val project = e?.project ?: return EMPTY_ARRAY
         val state = project.getService(FishReadingPersistentState::class.java).state
         val readerService = project.getService(FishReaderService::class.java)
 
