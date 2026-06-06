@@ -8,13 +8,21 @@
     <name>FishReading</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor url="https://www.yourcompany.com">YourCompany</vendor>
+    <vendor url="https://github.com/mikasastacy">Mikasa Stacy</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
     <description><![CDATA[
-        Enter short description for your plugin here.<br>
-        <em>most HTML tags may be used</em>
+        <h3>Fish Reading - 看书大师</h3>
+        <p>一款专为 IntelliJ IDEA 打造的 EPUB 电子书阅读器。</p>
+        <br>
+        <b>当前主要功能：</b>
+        <ul>
+            <li>支持导入标准 .epub 格式电子书</li>
+            <li>快捷键逐行切行，极致隐蔽</li>
+            <li>支持章节选择与快速跳转</li>
+        </ul>
+        <p><i>祝您阅读愉快！</i></p>
     ]]></description>
 
     <!-- Product and plugin compatibility requirements.
