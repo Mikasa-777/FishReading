@@ -1,4 +1,4 @@
-package com.example.fishreading
+package com.github.mikasastacy.fishreading.i18n
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.Nls
