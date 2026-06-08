@@ -33,7 +33,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                         actions.add(object : AnAction("尚未缓存目录，点击激活载入") {
                             override fun actionPerformed(event: AnActionEvent) {
                                 val editor = event.getData(CommonDataKeys.EDITOR) ?: return
-                                readerService.loadEpub(File(path))
+                                readerService.loadBook(File(path))
                                 service<FishInlayService>().updateInlay(editor, readerService.getCurrentLine())
                             }
                         })
@@ -44,7 +44,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                     actions.add(object : AnAction(resumeText) {
                         override fun actionPerformed(event: AnActionEvent) {
                             val editor = event.getData(CommonDataKeys.EDITOR) ?: return
-                            readerService.loadEpub(File(path))
+                            readerService.loadBook(File(path))
                             service<FishInlayService>().updateInlay(editor, readerService.getCurrentLine())
                         }
                     })
@@ -59,7 +59,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                             override fun actionPerformed(event: AnActionEvent) {
                                 val editor = event.getData(CommonDataKeys.EDITOR) ?: return
                                 if (state.lastActiveBookPath != path) {
-                                    readerService.loadEpub(File(path))
+                                    readerService.loadBook(File(path))
                                 }
                                 readerService.jumpToChapter(chapIndex)
                                 service<FishInlayService>().updateInlay(editor, readerService.getCurrentLine())

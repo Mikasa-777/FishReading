@@ -10,7 +10,7 @@ object EpubParser {
     fun parse(file: File, maxLineLength: Int = 50): List<Chapter> {
         val chapters = mutableListOf<Chapter>()
 
-        ZipFile(file).use { zip ->
+        ZipFile(file, StandardCharsets.UTF_8).use { zip ->
             val entries = zip.entries().asSequence()
                 .filter { it.name.endsWith(".xhtml") || it.name.endsWith(".html") }
                 .sortedBy { it.name }

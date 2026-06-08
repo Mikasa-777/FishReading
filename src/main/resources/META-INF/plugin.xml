@@ -54,7 +54,6 @@
 
             <action id="com.github.mikasastacy.fishreading.LoadEpubAction"
                     class="com.github.mikasastacy.fishreading.actions.LoadEpubAction"/>
-
             <separator/>
 
             <group id="com.github.mikasastacy.fishreading.BookAndChapterMenu"

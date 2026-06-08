@@ -32,6 +32,13 @@ class FishReaderService : Disposable {
         saveProgress()
     }
 
+    fun loadBook(file: File): String {
+        return when (val extension = file.extension.lowercase()) {
+            "epub" -> loadEpub(file)
+            else -> "暂不支持扩展名为 .$extension 的书籍"
+        }
+    }
+
     fun loadEpub(file: File): String {
         return try {
             val newChapters = EpubParser.parse(file)
