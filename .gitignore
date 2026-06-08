@@ -1,9 +1,13 @@
 ### IntelliJ IDEA ###
-.idea/
+.DS_Store
+.gradle
+.idea
 *.iws
 *.iml
 *.ipr
 out/
+.kotlin
+.qodana
+build
 
-
-.intellijPlatform/
+.intellijPlatform
