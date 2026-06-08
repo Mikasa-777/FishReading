@@ -52,9 +52,8 @@
         <group id="com.example.fishreading.MainMenu" popup="true">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
 
-            <action id="com.example.fishreading.LoadEpubAction"
-                    class="com.example.fishreading.LoadEpubAction"/>
-
+            <action id="com.example.fishreading.LoadBookAction"
+                    class="com.example.fishreading.LoadBookAction"/>
             <separator/>
 
             <group id="com.example.fishreading.BookAndChapterMenu"

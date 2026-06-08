@@ -31,7 +31,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                         actions.add(object : AnAction("⚠️ 尚未缓存目录，点击激活载入") {
                             override fun actionPerformed(event: AnActionEvent) {
                                 val editor = event.getData(CommonDataKeys.EDITOR) ?: return
-                                readerService.loadEpub(File(path))
+                                readerService.loadBook(File(path))
                                 FishInlayManager.updateInlay(editor, readerService.getCurrentLine())
                             }
                         })
@@ -45,7 +45,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                             val editor = event.getData(CommonDataKeys.EDITOR) ?: return
 
                             // 核心：直接调用 loadEpub，它内部会自动恢复这本书独有的 chapterIdx 和 lineIdx
-                            readerService.loadEpub(File(path))
+                            readerService.loadBook(File(path))
                             // 渲染引擎直接抓取恢复后的句子，完美复活！
                             FishInlayManager.updateInlay(editor, readerService.getCurrentLine())
                         }
@@ -63,7 +63,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                             override fun actionPerformed(event: AnActionEvent) {
                                 val editor = event.getData(CommonDataKeys.EDITOR) ?: return
                                 if (state.lastActiveBookPath != path) {
-                                    readerService.loadEpub(File(path))
+                                    readerService.loadBook(File(path))
                                 }
                                 // 点击具体章节，依然保持去往该章开头的逻辑
                                 readerService.jumpToChapter(chapIndex)
