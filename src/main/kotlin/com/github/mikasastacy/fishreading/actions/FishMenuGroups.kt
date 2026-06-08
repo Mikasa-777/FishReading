@@ -52,7 +52,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                     actions.add(Separator.getInstance())
 
                     val chapterActions = progress.chapterTitles.mapIndexed { chapIndex, title ->
-                        val isCurrentChapter = isCurrentBook && readerService.getCurrentChapterIdx() == chapIndex
+                        val isCurrentChapter = isCurrentBook && progress.chapterIdx == chapIndex
                         val chapterDisplayName = if (isCurrentChapter) "-> $title" else title
 
                         object : AnAction(chapterDisplayName) {
