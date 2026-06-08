@@ -9,7 +9,7 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.zip.ZipFile
 
-@Service(Service.Level.PROJECT)
+@Service(Service.Level.APP) // ✨ 修正：确保这里是 APP 级别
 class FishReaderService : Disposable {
 
     data class Chapter(val title: String, val lines: List<String>)
@@ -21,15 +21,14 @@ class FishReaderService : Disposable {
     private var currentLineIdx = 0
 
     init {
-        // 🎯 需求 3：注册全局光标监听器。只要光标移动（点击或上下换行），立刻擦除虚拟文字
+        // 注册全局光标监听器。只要光标移动（点击或上下换行），立刻擦除虚拟文字
         EditorFactory.getInstance().eventMulticaster.addCaretListener(object : CaretListener {
             override fun caretPositionChanged(event: CaretEvent) {
                 FishInlayManager.clearInlay()
             }
         }, this)
 
-        // 🎯 需求 1：自动加载上次看过的书
-        // ✨ 修改 3：将原先的 project.getService 改为全局 ApplicationManager 获取
+        // 自动加载上次看过的书
         val state = com.intellij.openapi.application.ApplicationManager.getApplication()
             .getService(FishReadingPersistentState::class.java).state
         state.lastActiveBookPath?.let { path ->
@@ -67,6 +66,7 @@ class FishReaderService : Disposable {
     }
 
     fun getChapterTitles(): List<String> = chapters.mapIndexed { i, c -> "[${i + 1}] ${c.title}" }
+//    fun getChapterTitlesRaw(): List<String> = chapters.map { it.title }
     fun getCurrentChapterIdx(): Int = currentChapterIdx
 
     fun jumpToChapter(index: Int) {
@@ -77,9 +77,7 @@ class FishReaderService : Disposable {
         }
     }
 
-    // 保存当前进度到持久化数据中
     private fun saveProgress() {
-        // ✨ 修改 3：将原先的 project.getService 改为全局 ApplicationManager 获取
         val state = com.intellij.openapi.application.ApplicationManager.getApplication()
             .getService(FishReadingPersistentState::class.java).state
         val path = state.lastActiveBookPath ?: return
@@ -90,7 +88,89 @@ class FishReaderService : Disposable {
     }
 
     /**
-     * 加载/切换电子书
+     * 智能文本切分与聚合算法（核心优化点 ✨）
+     * 黄金舒适区间：20 ~ 50 个字
+     */
+    private fun segmentTextIntelligently(rawText: String, maxLen: Int = 50): List<String> {
+
+        // 1. 先按传统的句子结束符初筛切断
+        val rawPieces = rawText.split(Regex("(?<=[。！？\n])"))
+        val result = mutableListOf<String>()
+        var buffer = StringBuilder()
+
+        for (rawPiece in rawPieces) {
+            val piece = rawPiece.trim()
+            if (piece.isEmpty()) continue
+
+            // 2. 情况 3：针对单句就长得离谱的超长句，调用下游函数先按逗号分级切碎
+            val chunks = if (piece.length > maxLen) {
+                splitLongSentence(piece, maxLen)
+            } else {
+                listOf(piece)
+            }
+
+            for (chunk in chunks) {
+                if (buffer.isEmpty()) {
+                    buffer.append(chunk)
+                } else if (buffer.length + chunk.length <= maxLen) {
+                    // 情况 1 & 2：如果当前缓冲区加上新句没有超标，直接合并（完美解决过短问题）
+                    buffer.append(chunk)
+                } else {
+                    // 缓冲区满了，冲刷进结果集，并开启新一轮的收集
+                    result.add("// ${buffer.toString().trim()}")
+                    buffer = StringBuilder(chunk)
+                }
+            }
+        }
+
+        // 别忘了冲刷最后留在缓冲区里的残余文本
+        if (buffer.isNotEmpty()) {
+            result.add("// ${buffer.toString().trim()}")
+        }
+        return result
+    }
+
+    /**
+     * 辅助函数：处理长句，优先按次级标点拆分
+     */
+    private fun splitLongSentence(sentence: String, maxLen: Int): List<String> {
+        val subPieces = sentence.split(Regex("(?<=[，；、,;])"))
+        val chunks = mutableListOf<String>()
+        var buffer = StringBuilder()
+
+        for (sub in subPieces) {
+            val trimmed = sub.trim()
+            if (trimmed.isEmpty()) continue
+
+            if (buffer.isEmpty()) {
+                buffer.append(trimmed)
+            } else if (buffer.length + trimmed.length <= maxLen) {
+                buffer.append(trimmed)
+            } else {
+                chunks.add(buffer.toString())
+                buffer = StringBuilder(trimmed)
+            }
+        }
+
+        if (buffer.isNotEmpty()) {
+            val finalStr = buffer.toString()
+            // 如果遇到丧心病狂、连逗号都没有的超级长句，直接强行物理截断
+            if (finalStr.length > maxLen) {
+                var start = 0
+                while (start < finalStr.length) {
+                    val end = minOf(start + maxLen, finalStr.length)
+                    chunks.add(finalStr.substring(start, end))
+                    start = end
+                }
+            } else {
+                chunks.add(finalStr)
+            }
+        }
+        return chunks
+    }
+
+    /**
+     * EPUB 解析器
      */
     fun loadEpub(file: File): String {
         val newChapters = mutableListOf<Chapter>()
@@ -125,8 +205,8 @@ class FishReaderService : Disposable {
                             .replace("&nbsp;", " ").replace("&ldquo;", "“").replace("&rdquo;", "”").trim()
 
                         if (cleanText.isNotBlank()) {
-                            val lines = cleanText.split(Regex("(?<=[。！？\n])"))
-                            val chapterLines = lines.map { it.trim() }.filter { it.isNotEmpty() }.map { "// $it" }
+                            // ✨ 核心调用切换：改用我们全新的智能贪婪分段算法
+                            val chapterLines = segmentTextIntelligently(cleanText, maxLen = 50)
                             if (chapterLines.isNotEmpty()) {
                                 newChapters.add(Chapter(chapterTitle, chapterLines))
                             }
@@ -138,8 +218,6 @@ class FishReaderService : Disposable {
             if (newChapters.isNotEmpty()) {
                 this.chapters = newChapters
 
-                // 写入并更新多书管理状态
-                // ✨ 修改 3：将原先的 project.getService 改为全局 ApplicationManager 获取
                 val state = com.intellij.openapi.application.ApplicationManager.getApplication()
                     .getService(FishReadingPersistentState::class.java).state
                 state.lastActiveBookPath = file.absolutePath
@@ -148,9 +226,7 @@ class FishReaderService : Disposable {
                     BookProgress().apply { bookName = file.nameWithoutExtension }
                 }
 
-                progress.chapterTitles = newChapters.map { it.title } // ✨ 新增这一行：将解析出的章节名同步保存到配置中
-
-                // 恢复这本书专属的历史进度
+                progress.chapterTitles = newChapters.map { it.title }
                 this.currentChapterIdx = progress.chapterIdx
                 this.currentLineIdx = progress.lineIdx
 

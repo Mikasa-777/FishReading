@@ -3,8 +3,6 @@ package com.example.fishreading
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.markup.TextAttributes
-import com.intellij.ui.JBColor
-import java.awt.Font
 
 object FishInlayManager {
     private var currentInlay: Inlay<*>? = null
