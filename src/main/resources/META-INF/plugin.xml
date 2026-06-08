@@ -1,7 +1,7 @@
 <!-- Plugin Configuration File: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <!-- Unique identifier of the plugin. It should be FQN, cannot be changed between the plugin versions. -->
-    <id>com.example.FishReading</id>
+    <id>com.github.mikasastacy.fishreading</id>
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
@@ -32,40 +32,39 @@
     <resource-bundle>messages.MyMessageBundle</resource-bundle>
 
     <actions>
-        <action id="com.example.fishreading.NextLineAction"
-                class="com.example.fishreading.NextLineAction">
+        <action id="com.github.mikasastacy.fishreading.NextLineAction"
+                class="com.github.mikasastacy.fishreading.actions.NextLineAction">
             <keyboard-shortcut keymap="$default" first-keystroke="alt L"/>
         </action>
 
-        <action id="com.example.fishreading.PrevLineAction"
-                class="com.example.fishreading.PrevLineAction">
+        <action id="com.github.mikasastacy.fishreading.PrevLineAction"
+                class="com.github.mikasastacy.fishreading.actions.PrevLineAction">
             <keyboard-shortcut keymap="$default" first-keystroke="alt K"/>
         </action>
 
-        <action id="com.example.fishreading.SelectChapterAction"
-                class="com.example.fishreading.SelectChapterAction">
+        <action id="com.github.mikasastacy.fishreading.SelectChapterAction"
+                class="com.github.mikasastacy.fishreading.actions.SelectChapterAction">
             <keyboard-shortcut keymap="$default" first-keystroke="alt DOWN"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="control alt DOWN"/>
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control alt DOWN"/>
         </action>
 
-        <group id="com.example.fishreading.MainMenu" popup="true">
+        <group id="com.github.mikasastacy.fishreading.MainMenu" popup="true">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
 
-            <action id="com.example.fishreading.LoadBookAction"
-                    class="com.example.fishreading.LoadBookAction"/>
+            <action id="com.github.mikasastacy.fishreading.LoadEpubAction"
+                    class="com.github.mikasastacy.fishreading.actions.LoadEpubAction"/>
             <separator/>
 
-            <group id="com.example.fishreading.BookAndChapterMenu"
-                   class="com.example.fishreading.BookAndChapterMenuGroup"/>
+            <group id="com.github.mikasastacy.fishreading.BookAndChapterMenu"
+                   class="com.github.mikasastacy.fishreading.actions.BookAndChapterMenuGroup"/>
         </group>
     </actions>
 
-    <resource-bundle>messages.MyMessageBundle</resource-bundle>
     <!-- Extensions defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="MyToolWindow" factoryClass="com.example.fishreading.MyToolWindowFactory"
+        <toolWindow id="MyToolWindow" factoryClass="com.github.mikasastacy.fishreading.toolwindow.MyToolWindowFactory"
                     icon="AllIcons.Toolwindows.ToolWindowPalette"/>
     </extensions>
 </idea-plugin>

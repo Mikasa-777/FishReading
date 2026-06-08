@@ -1,0 +1,78 @@
+package com.github.mikasastacy.fishreading.reader
+
+import com.github.mikasastacy.fishreading.state.BookProgress
+import com.github.mikasastacy.fishreading.state.FishReadingPersistentState
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
+import java.io.File
+
+@Service(Service.Level.APP)
+class FishReaderService : Disposable {
+    private val session = ReaderSession(emptyList())
+
+    fun getCurrentLine(): String = session.currentLine()
+
+    fun nextLine() {
+        session.nextLine()
+        saveProgress()
+    }
+
+    fun prevLine() {
+        session.prevLine()
+        saveProgress()
+    }
+
+    fun getChapterTitles(): List<String> = session.chapterTitles()
+
+    fun getCurrentChapterIdx(): Int = session.chapterIndex
+
+    fun jumpToChapter(index: Int) {
+        session.jumpToChapter(index)
+        saveProgress()
+    }
+
+    fun loadBook(file: File): String {
+        return when (val extension = file.extension.lowercase()) {
+            "epub" -> loadEpub(file)
+            else -> "暂不支持扩展名为 .$extension 的书籍"
+        }
+    }
+
+    fun loadEpub(file: File): String {
+        return try {
+            val newChapters = EpubParser.parse(file)
+            if (newChapters.isEmpty()) {
+                "未发现有效文本"
+            } else {
+                applyLoadedBook(file, newChapters)
+                "成功装载《${file.nameWithoutExtension}》"
+            }
+        } catch (e: Exception) {
+            "加载失败: ${e.message}"
+        }
+    }
+
+    private fun applyLoadedBook(file: File, newChapters: List<Chapter>) {
+        val state = service<FishReadingPersistentState>().state
+        state.lastActiveBookPath = file.absolutePath
+
+        val progress = state.managedBooks.getOrPut(file.absolutePath) {
+            BookProgress().apply { bookName = file.nameWithoutExtension }
+        }
+
+        progress.chapterTitles = newChapters.map { it.title }
+        session.replaceChapters(newChapters, progress.chapterIdx, progress.lineIdx)
+    }
+
+    private fun saveProgress() {
+        val state = service<FishReadingPersistentState>().state
+        val path = state.lastActiveBookPath ?: return
+        state.managedBooks[path]?.apply {
+            chapterIdx = session.chapterIndex
+            lineIdx = session.lineIndex
+        }
+    }
+
+    override fun dispose() {}
+}

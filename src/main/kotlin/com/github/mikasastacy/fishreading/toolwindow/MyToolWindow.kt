@@ -1,4 +1,4 @@
-package com.example.fishreading
+package com.github.mikasastacy.fishreading.toolwindow
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
