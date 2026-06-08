@@ -10,24 +10,34 @@ import java.io.File
 @Service(Service.Level.APP)
 class FishReaderService : Disposable {
     private val session = ReaderSession(emptyList())
+    private var loadedBookPath: String? = null
 
-    fun getCurrentLine(): String = session.currentLine()
+    fun getCurrentLine(): String {
+        ensureActiveBookLoaded()
+        return session.currentLine()
+    }
 
     fun nextLine() {
+        if (!ensureActiveBookLoaded()) return
         session.nextLine()
         saveProgress()
     }
 
     fun prevLine() {
+        if (!ensureActiveBookLoaded()) return
         session.prevLine()
         saveProgress()
     }
 
-    fun getChapterTitles(): List<String> = session.chapterTitles()
+    fun getChapterTitles(): List<String> {
+        ensureActiveBookLoaded()
+        return session.chapterTitles()
+    }
 
     fun getCurrentChapterIdx(): Int = session.chapterIndex
 
     fun jumpToChapter(index: Int) {
+        if (!ensureActiveBookLoaded()) return
         session.jumpToChapter(index)
         saveProgress()
     }
@@ -35,6 +45,7 @@ class FishReaderService : Disposable {
     fun loadBook(file: File): String {
         return when (val extension = file.extension.lowercase()) {
             "epub" -> loadEpub(file)
+            "txt" -> loadTxt(file)
             else -> "暂不支持扩展名为 .$extension 的书籍"
         }
     }
@@ -42,6 +53,20 @@ class FishReaderService : Disposable {
     fun loadEpub(file: File): String {
         return try {
             val newChapters = EpubParser.parse(file)
+            if (newChapters.isEmpty()) {
+                "未发现有效文本"
+            } else {
+                applyLoadedBook(file, newChapters)
+                "成功装载《${file.nameWithoutExtension}》"
+            }
+        } catch (e: Exception) {
+            "加载失败: ${e.message}"
+        }
+    }
+
+    fun loadTxt(file: File): String {
+        return try {
+            val newChapters = TxtParser.parse(file)
             if (newChapters.isEmpty()) {
                 "未发现有效文本"
             } else {
@@ -63,6 +88,20 @@ class FishReaderService : Disposable {
 
         progress.chapterTitles = newChapters.map { it.title }
         session.replaceChapters(newChapters, progress.chapterIdx, progress.lineIdx)
+        loadedBookPath = file.absolutePath
+    }
+
+    private fun ensureActiveBookLoaded(): Boolean {
+        val path = service<FishReadingPersistentState>().state.lastActiveBookPath ?: return false
+        if (loadedBookPath == path) return true
+
+        val file = File(path)
+        if (!file.exists() || file.extension.lowercase() !in SUPPORTED_EXTENSIONS) {
+            return false
+        }
+
+        loadBook(file)
+        return loadedBookPath == path
     }
 
     private fun saveProgress() {
@@ -75,4 +114,8 @@ class FishReaderService : Disposable {
     }
 
     override fun dispose() {}
+
+    companion object {
+        private val SUPPORTED_EXTENSIONS = setOf("epub", "txt")
+    }
 }
