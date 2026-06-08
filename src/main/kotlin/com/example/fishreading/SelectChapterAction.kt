@@ -3,13 +3,13 @@ package com.example.fishreading
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.ui.popup.JBPopupFactory
 
 class SelectChapterAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        val project = e.project ?: return
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
-        val readerService = project.getService(FishReaderService::class.java)
+        val readerService = ApplicationManager.getApplication().getService(FishReaderService::class.java)
 
         // 1. 获取所有清洗好的章节标题列表
         val titles = readerService.getChapterTitles()

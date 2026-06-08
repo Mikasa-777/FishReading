@@ -1,20 +1,20 @@
 package com.example.fishreading
 
-import com.intellij.openapi.actionSystem.ActionGroup
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.actionSystem.Separator
+import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.components.service
 import java.io.File
 
 class BookAndChapterMenuGroup : ActionGroup() {
 
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
-        val project = e?.project ?: return EMPTY_ARRAY
-        // ✨ 修改 3：将原先的 project.getService 改为全局 ApplicationManager 获取
-        val state = com.intellij.openapi.application.ApplicationManager.getApplication()
-            .getService(FishReadingPersistentState::class.java).state
-        val readerService = project.getService(FishReaderService::class.java)
+        // ✨ 1. 彻底移除 project 检查，直接使用极简的 service<T>() 获取全局服务
+        val state = service<FishReadingPersistentState>().state
+        val readerService = service<FishReaderService>()
+
+        // 如果没有任何缓存的书，直接返回空数组（注意：用 AnAction.EMPTY_ARRAY 最稳妥）
+        if (state.managedBooks.isEmpty()) {
+            return EMPTY_ARRAY
+        }
 
         // 遍历所有缓存的书籍
         return state.managedBooks.map { (path, progress) ->

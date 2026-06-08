@@ -2,6 +2,7 @@ package com.example.fishreading
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.ui.Messages
@@ -24,7 +25,7 @@ class LoadEpubAction : AnAction() {
             val file = File(virtualFile.path)
 
             // 3. 调用服务解析电子书
-            val readerService = project.getService(FishReaderService::class.java)
+            val readerService = ApplicationManager.getApplication().getService(FishReaderService::class.java)
             val resultNotify = readerService.loadEpub(file)
 
             // 4. 极致轻量弹窗通知结果
