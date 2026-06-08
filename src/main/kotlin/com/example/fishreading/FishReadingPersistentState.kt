@@ -12,7 +12,7 @@ class BookProgress {
 }
 
 @State(name = "FishReadingState", storages = [Storage("fish_reading_config.xml")])
-@Service(Service.Level.PROJECT)
+@Service(Service.Level.APP)
 class FishReadingPersistentState : PersistentStateComponent<FishReadingPersistentState.State> {
 
     class State {

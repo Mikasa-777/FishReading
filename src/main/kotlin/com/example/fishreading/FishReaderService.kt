@@ -5,13 +5,12 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.event.CaretEvent
 import com.intellij.openapi.editor.event.CaretListener
-import com.intellij.openapi.project.Project
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.zip.ZipFile
 
 @Service(Service.Level.PROJECT)
-class FishReaderService(private val project: Project) : Disposable {
+class FishReaderService : Disposable {
 
     data class Chapter(val title: String, val lines: List<String>)
 
@@ -30,7 +29,9 @@ class FishReaderService(private val project: Project) : Disposable {
         }, this)
 
         // 🎯 需求 1：自动加载上次看过的书
-        val state = project.getService(FishReadingPersistentState::class.java).state
+        // ✨ 修改 3：将原先的 project.getService 改为全局 ApplicationManager 获取
+        val state = com.intellij.openapi.application.ApplicationManager.getApplication()
+            .getService(FishReadingPersistentState::class.java).state
         state.lastActiveBookPath?.let { path ->
             val file = File(path)
             if (file.exists()) {
@@ -78,7 +79,9 @@ class FishReaderService(private val project: Project) : Disposable {
 
     // 保存当前进度到持久化数据中
     private fun saveProgress() {
-        val state = project.getService(FishReadingPersistentState::class.java).state
+        // ✨ 修改 3：将原先的 project.getService 改为全局 ApplicationManager 获取
+        val state = com.intellij.openapi.application.ApplicationManager.getApplication()
+            .getService(FishReadingPersistentState::class.java).state
         val path = state.lastActiveBookPath ?: return
         state.managedBooks[path]?.apply {
             chapterIdx = currentChapterIdx
@@ -136,7 +139,9 @@ class FishReaderService(private val project: Project) : Disposable {
                 this.chapters = newChapters
 
                 // 写入并更新多书管理状态
-                val state = project.getService(FishReadingPersistentState::class.java).state
+                // ✨ 修改 3：将原先的 project.getService 改为全局 ApplicationManager 获取
+                val state = com.intellij.openapi.application.ApplicationManager.getApplication()
+                    .getService(FishReadingPersistentState::class.java).state
                 state.lastActiveBookPath = file.absolutePath
 
                 val progress = state.managedBooks.getOrPut(file.absolutePath) {

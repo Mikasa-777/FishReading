@@ -11,7 +11,9 @@ class BookAndChapterMenuGroup : ActionGroup() {
 
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
         val project = e?.project ?: return EMPTY_ARRAY
-        val state = project.getService(FishReadingPersistentState::class.java).state
+        // ✨ 修改 3：将原先的 project.getService 改为全局 ApplicationManager 获取
+        val state = com.intellij.openapi.application.ApplicationManager.getApplication()
+            .getService(FishReadingPersistentState::class.java).state
         val readerService = project.getService(FishReaderService::class.java)
 
         // 遍历所有缓存的书籍

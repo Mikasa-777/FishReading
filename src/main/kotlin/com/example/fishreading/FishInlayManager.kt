@@ -21,19 +21,35 @@ object FishInlayManager {
         val caretModel = editor.caretModel
         val currentOffset = caretModel.offset
 
-        // 2. 设置伪装字体的颜色（灰色斜体，高仿注释）
+        // 2. ✨ 新增：动态计算当前光标所在行的缩进字符串
+        val document = editor.document
+        val chars = document.immutableCharSequence
+        val lineNumber = document.getLineNumber(currentOffset)
+        val lineStartOffset = document.getLineStartOffset(lineNumber)
+
+        // 从行首开始遍历，直到遇到非空白字符，把前面的空格/Tab全抓出来
+        var i = lineStartOffset
+        while (i < chars.length && (chars[i] == ' ' || chars[i] == '\t')) {
+            i++
+        }
+        val indentPrefix = chars.subSequence(lineStartOffset, i).toString()
+
+        // 将缩进前缀和小说内容拼接（例如："    " + "// 突然..."）
+        val indentedText = indentPrefix + text
+
+        // 3. 设置伪装字体的颜色（灰色斜体，高仿注释）
         val attributes = TextAttributes().apply {
-            foregroundColor = JBColor.GRAY
-            fontType = Font.ITALIC
+            foregroundColor = com.intellij.ui.JBColor.GRAY
+            fontType = java.awt.Font.ITALIC
         }
 
-        // 3. 渲染新文本
+        // 4. 渲染拼接了缩进的新文本
         currentInlay = inlayModel.addBlockElement(
             currentOffset,
             true,
             true,
             0,
-            FishInlayRenderer(text, attributes)
+            FishInlayRenderer(indentedText, attributes) // ✨ 这里改传 indentedText
         )
     }
 
