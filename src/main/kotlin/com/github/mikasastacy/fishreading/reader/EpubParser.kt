@@ -1,6 +1,9 @@
 package com.github.mikasastacy.fishreading.reader
 
 import java.io.File
+import java.nio.ByteBuffer
+import java.nio.charset.Charset
+import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
 import java.util.zip.ZipFile
 
@@ -19,7 +22,9 @@ object EpubParser {
             var anonymousChapterCount = 1
             for (entry in entries) {
                 zip.getInputStream(entry).use { stream ->
-                    val htmlContent = stream.readBytes().toString(StandardCharsets.UTF_8)
+                    //  先抓取原始字节，探测真实编码后再实例化字符串
+                    val rawBytes = stream.readBytes()
+                    val htmlContent = String(rawBytes, detectCharset(rawBytes))
                     val chapterTitle = extractChapterTitle(htmlContent)
                         .takeUnless { it.isBlank() || it.lowercase().contains("untitled") }
                         ?: "第 ${anonymousChapterCount++} 部分"
@@ -57,5 +62,19 @@ object EpubParser {
             .replace("&ldquo;", "“")
             .replace("&rdquo;", "”")
             .trim()
+    }
+
+    private fun detectCharset(bytes: ByteArray): Charset {
+        return try {
+            val decoder = StandardCharsets.UTF_8.newDecoder()
+
+            decoder.onMalformedInput(CodingErrorAction.REPORT)
+            decoder.onUnmappableCharacter(CodingErrorAction.REPORT)
+
+            decoder.decode(ByteBuffer.wrap(bytes))
+            StandardCharsets.UTF_8
+        } catch (_: Exception) {
+            Charset.forName("GBK")
+        }
     }
 }
