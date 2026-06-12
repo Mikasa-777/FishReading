@@ -82,11 +82,8 @@ class FishReaderService : Disposable {
         val state = service<FishReadingPersistentState>().state
         state.lastActiveBookPath = file.absolutePath
 
-        val progress = state.managedBooks.getOrPut(file.absolutePath) {
-            BookProgress().apply { bookName = file.nameWithoutExtension }
-        }
-
-        progress.chapterTitles = newChapters.map { it.title }
+        val progress = state.getBookProgress(file.absolutePath, file.nameWithoutExtension)
+        state.updateChapterTitles(file.absolutePath, newChapters.map { it.title })
         session.replaceChapters(newChapters, progress.chapterIdx, progress.lineIdx)
         loadedBookPath = file.absolutePath
     }
@@ -107,10 +104,7 @@ class FishReaderService : Disposable {
     private fun saveProgress() {
         val state = service<FishReadingPersistentState>().state
         val path = state.lastActiveBookPath ?: return
-        state.managedBooks[path]?.apply {
-            chapterIdx = session.chapterIndex
-            lineIdx = session.lineIndex
-        }
+        state.saveProgress(path, session.chapterIndex, session.lineIndex)
     }
 
     override fun dispose() {}

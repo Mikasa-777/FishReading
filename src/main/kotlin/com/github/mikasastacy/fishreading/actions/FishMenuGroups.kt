@@ -44,12 +44,20 @@ class BookAndChapterMenuGroup : ActionGroup() {
                     actions.add(object : AnAction(resumeText) {
                         override fun actionPerformed(event: AnActionEvent) {
                             val editor = event.getData(CommonDataKeys.EDITOR) ?: return
-                            readerService.loadBook(File(path))
+                            if (state.lastActiveBookPath != path) {
+                                readerService.loadBook(File(path))
+                            }
                             service<FishInlayService>().updateInlay(editor, readerService.getCurrentLine())
                         }
                     })
 
                     actions.add(Separator.getInstance())
+
+                    actions.add(object : AnAction("忘记本书") {
+                        override fun actionPerformed(event: AnActionEvent) {
+                            state.removeBook(path)
+                        }
+                    })
 
                     val chapterActions = progress.chapterTitles.mapIndexed { chapIndex, title ->
                         val isCurrentChapter = isCurrentBook && progress.chapterIdx == chapIndex

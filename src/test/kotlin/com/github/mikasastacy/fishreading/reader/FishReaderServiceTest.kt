@@ -1,6 +1,5 @@
 package com.github.mikasastacy.fishreading.reader
 
-import com.github.mikasastacy.fishreading.state.BookProgress
 import com.github.mikasastacy.fishreading.state.FishReadingPersistentState
 import com.intellij.openapi.components.service
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
@@ -33,16 +32,12 @@ class FishReaderServiceTest : BasePlatformTestCase() {
             """.trimIndent()
         )
         val path = file.absolutePath
-        val progress = BookProgress().apply {
-            bookName = file.nameWithoutExtension
-            chapterIdx = 0
-            lineIdx = 0
-            chapterTitles = listOf("第一章 开始", "第二章 继续")
-        }
-        service<FishReadingPersistentState>().state.apply {
-            lastActiveBookPath = path
-            managedBooks[path] = progress
-        }
+        val state = service<FishReadingPersistentState>().state
+        state.lastActiveBookPath = path
+        val progress = state.getBookProgress(path, file.nameWithoutExtension)
+        progress.chapterIdx = 0
+        progress.lineIdx = 0
+        state.updateChapterTitles(path, listOf("第一章 开始", "第二章 继续"))
 
         val readerService = FishReaderService()
 
@@ -65,16 +60,12 @@ class FishReaderServiceTest : BasePlatformTestCase() {
             """.trimIndent()
         )
         val path = file.absolutePath
-        val progress = BookProgress().apply {
-            bookName = file.nameWithoutExtension
-            chapterIdx = 1
-            lineIdx = 0
-            chapterTitles = listOf("第一章 开始", "第二章 继续", "第三章 收尾")
-        }
-        service<FishReadingPersistentState>().state.apply {
-            lastActiveBookPath = path
-            managedBooks[path] = progress
-        }
+        val state = service<FishReadingPersistentState>().state
+        state.lastActiveBookPath = path
+        val progress = state.getBookProgress(path, file.nameWithoutExtension)
+        progress.chapterIdx = 1
+        progress.lineIdx = 0
+        state.updateChapterTitles(path, listOf("第一章 开始", "第二章 继续", "第三章 收尾"))
 
         val readerService = FishReaderService()
 
@@ -96,15 +87,12 @@ class FishReaderServiceTest : BasePlatformTestCase() {
             """.trimIndent()
         )
         val path = file.absolutePath
-        service<FishReadingPersistentState>().state.apply {
-            lastActiveBookPath = path
-            managedBooks[path] = BookProgress().apply {
-                bookName = file.nameWithoutExtension
-                chapterIdx = 0
-                lineIdx = 0
-                chapterTitles = listOf("第一章 开始", "第二章 继续")
-            }
-        }
+        val state = service<FishReadingPersistentState>().state
+        state.lastActiveBookPath = path
+        val progress = state.getBookProgress(path, file.nameWithoutExtension)
+        progress.chapterIdx = 0
+        progress.lineIdx = 0
+        state.updateChapterTitles(path, listOf("第一章 开始", "第二章 继续"))
 
         val readerService = FishReaderService()
 
@@ -118,16 +106,12 @@ class FishReaderServiceTest : BasePlatformTestCase() {
         val missingPath = createTempFile(prefix = "missing-book", suffix = ".txt").toFile().apply {
             delete()
         }.absolutePath
-        val progress = BookProgress().apply {
-            bookName = "missing-book"
-            chapterIdx = 3
-            lineIdx = 7
-            chapterTitles = listOf("旧目录")
-        }
-        service<FishReadingPersistentState>().state.apply {
-            lastActiveBookPath = missingPath
-            managedBooks[missingPath] = progress
-        }
+        val state = service<FishReadingPersistentState>().state
+        state.lastActiveBookPath = missingPath
+        val progress = state.getBookProgress(missingPath, "missing-book")
+        progress.chapterIdx = 3
+        progress.lineIdx = 7
+        state.updateChapterTitles(missingPath, listOf("旧目录"))
 
         val readerService = FishReaderService()
 

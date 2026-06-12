@@ -19,6 +19,43 @@ class FishReadingPersistentState : PersistentStateComponent<FishReadingPersisten
     class State {
         var lastActiveBookPath: String? = null
         var managedBooks: MutableMap<String, BookProgress> = mutableMapOf()
+            private set
+
+        fun getBookProgress(filePath: String, bookName: String): BookProgress {
+            val existing = managedBooks[filePath]
+            if (existing != null) {
+                existing.bookName = bookName
+                return existing
+            }
+            val progress = BookProgress().apply { this.bookName = bookName }
+            managedBooks = managedBooks.toMutableMap().also { it[filePath] = progress }
+            return progress
+        }
+
+        fun updateChapterTitles(filePath: String, titles: List<String>) {
+            managedBooks[filePath]?.chapterTitles = titles
+            bumpMap()
+        }
+
+        fun saveProgress(filePath: String, chapterIdx: Int, lineIdx: Int) {
+            managedBooks[filePath]?.apply {
+                this.chapterIdx = chapterIdx
+                this.lineIdx = lineIdx
+            }
+            bumpMap()
+        }
+
+        fun removeBook(filePath: String) {
+            if (filePath !in managedBooks) return
+            managedBooks = managedBooks.toMutableMap().also { it.remove(filePath) }
+            if (lastActiveBookPath == filePath) {
+                lastActiveBookPath = null
+            }
+        }
+
+        private fun bumpMap() {
+            managedBooks = managedBooks.toMutableMap()
+        }
     }
 
     private var myState = State()
