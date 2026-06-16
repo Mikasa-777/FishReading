@@ -51,13 +51,13 @@ class BookAndChapterMenuGroup : ActionGroup() {
                         }
                     })
 
-                    actions.add(Separator.getInstance())
-
                     actions.add(object : AnAction("忘记本书") {
                         override fun actionPerformed(event: AnActionEvent) {
                             state.removeBook(path)
                         }
                     })
+
+                    actions.add(Separator.getInstance())
 
                     val chapterActions = progress.chapterTitles.mapIndexed { chapIndex, title ->
                         val isCurrentChapter = isCurrentBook && progress.chapterIdx == chapIndex
