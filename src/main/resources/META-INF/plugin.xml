@@ -54,6 +54,8 @@
 
             <action id="com.github.mikasastacy.fishreading.LoadEpubAction"
                     class="com.github.mikasastacy.fishreading.actions.LoadBookAction"/>
+            <group id="com.github.mikasastacy.fishreading.ReadingLineCountMenu"
+                   class="com.github.mikasastacy.fishreading.actions.ReadingLineCountMenuGroup"/>
             <separator/>
 
             <group id="com.github.mikasastacy.fishreading.BookAndChapterMenu"

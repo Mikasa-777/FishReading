@@ -3,8 +3,11 @@ package com.github.mikasastacy.fishreading.inlay
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import com.intellij.ui.JBColor
 import java.awt.event.KeyEvent
 
 class FishInlayServiceTest : BasePlatformTestCase() {
@@ -87,6 +90,34 @@ class FishInlayServiceTest : BasePlatformTestCase() {
         inlayService.handleEditorFocusLost(oldEditor)
 
         assertTrue(inlayService.hasActiveInlay())
+    }
+
+    fun testRendererUsesLineCountHeightAndLongestLineWidth() {
+        val editor = configureEditor()
+        inlayService.updateInlay(editor, listOf("// short", "// much longer"))
+        val inlay = editor.inlayModel.getBlockElementsInRange(0, editor.document.textLength).single()
+        val metrics = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN))
+
+        assertEquals(editor.lineHeight * 2, inlay.heightInPixels)
+        assertEquals(metrics.stringWidth("    // much longer"), inlay.widthInPixels)
+    }
+
+    fun testRendererDirectlyComputesMultilineDimensions() {
+        val editor = configureEditor()
+        val inlay = editor.inlayModel.addBlockElement(
+            0,
+            true,
+            true,
+            0,
+            FishInlayRenderer(
+                listOf("// a", "// abc"),
+                TextAttributes().apply { foregroundColor = JBColor.GRAY }
+            )
+        ) ?: error("inlay was not created")
+        val metrics = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN))
+
+        assertEquals(editor.lineHeight * 2, inlay.heightInPixels)
+        assertEquals(metrics.stringWidth("// abc"), inlay.widthInPixels)
     }
 
     private fun configureEditor(): Editor {

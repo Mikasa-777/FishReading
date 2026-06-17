@@ -18,6 +18,7 @@ class FishReadingPersistentState : PersistentStateComponent<FishReadingPersisten
 
     class State {
         var lastActiveBookPath: String? = null
+        var readingLineCount: Int = DEFAULT_READING_LINE_COUNT
         var managedBooks: MutableMap<String, BookProgress> = mutableMapOf()
             private set
 
@@ -53,8 +54,20 @@ class FishReadingPersistentState : PersistentStateComponent<FishReadingPersisten
             }
         }
 
+        fun normalizedReadingLineCount(): Int = readingLineCount.coerceIn(MIN_READING_LINE_COUNT, MAX_READING_LINE_COUNT)
+
+        fun updateReadingLineCount(lineCount: Int) {
+            readingLineCount = lineCount.coerceIn(MIN_READING_LINE_COUNT, MAX_READING_LINE_COUNT)
+        }
+
         private fun bumpMap() {
             managedBooks = managedBooks.toMutableMap()
+        }
+
+        companion object {
+            const val MIN_READING_LINE_COUNT = 1
+            const val MAX_READING_LINE_COUNT = 20
+            const val DEFAULT_READING_LINE_COUNT = 1
         }
     }
 

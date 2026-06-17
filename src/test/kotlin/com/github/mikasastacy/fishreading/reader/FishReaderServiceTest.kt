@@ -124,6 +124,59 @@ class FishReaderServiceTest : BasePlatformTestCase() {
         assertEquals("// [FishReading] 请去 Tools 菜单加载或选择书籍", readerService.getCurrentLine())
     }
 
+    fun testCurrentPagePadsMissingActiveBookToReadingLineCount() {
+        service<FishReadingPersistentState>().state.readingLineCount = 3
+        val readerService = FishReaderService()
+
+        assertEquals(
+            listOf("// [FishReading] 请去 Tools 菜单加载或选择书籍", "//", "//"),
+            readerService.getCurrentPage()
+        )
+    }
+
+    fun testNextPageSavesPageStartProgress() {
+        val firstLine = "第一行内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容。"
+        val secondLine = "第二行内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容。"
+        val thirdLine = "第三行内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容。"
+        val fourthLine = "第四行内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容。"
+        val file = createTxtFile(
+            """
+            第一章 开始
+            $firstLine
+            $secondLine
+            $thirdLine
+            $fourthLine
+            """.trimIndent()
+        )
+        val path = file.absolutePath
+        val state = service<FishReadingPersistentState>().state
+        state.readingLineCount = 2
+        state.lastActiveBookPath = path
+        val progress = state.getBookProgress(path, file.nameWithoutExtension)
+        progress.chapterIdx = 0
+        progress.lineIdx = 0
+        state.updateChapterTitles(path, listOf("第一章 开始"))
+
+        val readerService = FishReaderService()
+
+        assertEquals(listOf("// $firstLine", "// $secondLine"), readerService.getCurrentPage())
+        readerService.nextPage()
+
+        assertEquals(listOf("// $thirdLine", "// $fourthLine"), readerService.getCurrentPage())
+        assertEquals(0, progress.chapterIdx)
+        assertEquals(2, progress.lineIdx)
+    }
+
+    fun testReadingLineCountIsClampedToSupportedRange() {
+        val state = service<FishReadingPersistentState>().state
+
+        state.readingLineCount = 0
+        assertEquals(1, state.normalizedReadingLineCount())
+
+        state.readingLineCount = 21
+        assertEquals(20, state.normalizedReadingLineCount())
+    }
+
     fun testLoadBookAcceptsDirectoryEpubAndSavesAbsolutePathProgress() {
         val directory = createDirectoryEpub()
         val readerService = FishReaderService()

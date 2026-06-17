@@ -17,15 +17,32 @@ class FishReaderService : Disposable {
         return session.currentLine()
     }
 
+    fun getCurrentPage(): List<String> {
+        ensureActiveBookLoaded()
+        return session.currentPage(readingLineCount())
+    }
+
     fun nextLine() {
         if (!ensureActiveBookLoaded()) return
-        session.nextLine()
+        session.nextPage(readingLineCount())
+        saveProgress()
+    }
+
+    fun nextPage() {
+        if (!ensureActiveBookLoaded()) return
+        session.nextPage(readingLineCount())
         saveProgress()
     }
 
     fun prevLine() {
         if (!ensureActiveBookLoaded()) return
-        session.prevLine()
+        session.prevPage(readingLineCount())
+        saveProgress()
+    }
+
+    fun prevPage() {
+        if (!ensureActiveBookLoaded()) return
+        session.prevPage(readingLineCount())
         saveProgress()
     }
 
@@ -106,6 +123,8 @@ class FishReaderService : Disposable {
         val path = state.lastActiveBookPath ?: return
         state.saveProgress(path, session.chapterIndex, session.lineIndex)
     }
+
+    private fun readingLineCount(): Int = service<FishReadingPersistentState>().state.normalizedReadingLineCount()
 
     override fun dispose() {}
 

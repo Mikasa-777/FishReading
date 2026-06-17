@@ -9,12 +9,15 @@ import java.awt.Graphics2D
 import java.awt.geom.Rectangle2D
 
 class FishInlayRenderer(
-    private val text: String,
+    private val lines: List<String>,
     private val attributes: TextAttributes
 ) : EditorCustomElementRenderer {
 
+    constructor(text: String, attributes: TextAttributes) : this(listOf(text), attributes)
+
     private fun getSafeFont(inlay: Inlay<*>): Font {
         val editorFont = inlay.editor.colorsScheme.getFont(EditorFontType.PLAIN)
+        val text = lines.joinToString("\n")
 
         // 阶梯 1：优先信任并采用用户当前 IDE 正在用的代码字体（例如 JetBrains Mono，测试证明它最健康）
         val primaryFont = Font(editorFont.name, Font.ITALIC, editorFont.size)
@@ -35,10 +38,10 @@ class FishInlayRenderer(
     override fun calcWidthInPixels(inlay: Inlay<*>): Int {
         val safeFont = getSafeFont(inlay) // 动态抓取活字
         val metrics = inlay.editor.contentComponent.getFontMetrics(safeFont)
-        return metrics.stringWidth(text)
+        return lines.maxOfOrNull { metrics.stringWidth(it) } ?: 0
     }
 
-    override fun calcHeightInPixels(inlay: Inlay<*>): Int = inlay.editor.lineHeight
+    override fun calcHeightInPixels(inlay: Inlay<*>): Int = inlay.editor.lineHeight * lines.size.coerceAtLeast(1)
 
     override fun paint(inlay: Inlay<*>, g: Graphics2D, targetRegion: Rectangle2D, textAttributes: TextAttributes) {
         val editor = inlay.editor
@@ -47,9 +50,11 @@ class FishInlayRenderer(
         g.font = safeFont
         g.color = attributes.foregroundColor
 
-        val y = targetRegion.y + editor.ascent
         val x = targetRegion.x
 
-        g.drawString(text, x.toFloat(), y.toFloat())
+        lines.forEachIndexed { index, line ->
+            val y = targetRegion.y + editor.ascent + editor.lineHeight * index
+            g.drawString(line, x.toFloat(), y.toFloat())
+        }
     }
 }

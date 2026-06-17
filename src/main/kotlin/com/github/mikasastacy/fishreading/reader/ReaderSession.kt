@@ -25,24 +25,41 @@ class ReaderSession(
         return chapter.lines.getOrNull(lineIndex) ?: return "// 本章结束"
     }
 
+    fun currentPage(pageSize: Int): List<String> {
+        val normalizedPageSize = pageSize.coerceIn(MIN_PAGE_SIZE, MAX_PAGE_SIZE)
+        val chapter = chapters.getOrNull(chapterIndex)
+        val lines = chapter?.lines
+            ?.drop(lineIndex)
+            ?.take(normalizedPageSize)
+            .orEmpty()
+        return lines + List(normalizedPageSize - lines.size) { EMPTY_SLOT }
+    }
+
     fun chapterTitles(): List<String> = chapters.mapIndexed { i, chapter -> "[${i + 1}] ${chapter.title}" }
 
-    fun nextLine() {
+    fun nextLine() = nextPage(1)
+
+    fun nextPage(pageSize: Int) {
+        val normalizedPageSize = pageSize.coerceIn(MIN_PAGE_SIZE, MAX_PAGE_SIZE)
         val currentChapter = chapters.getOrNull(chapterIndex) ?: return
-        if (lineIndex < currentChapter.lines.size - 1) {
-            lineIndex++
+        if (lineIndex + normalizedPageSize < currentChapter.lines.size) {
+            lineIndex += normalizedPageSize
         } else if (chapterIndex < chapters.size - 1) {
             chapterIndex++
             lineIndex = 0
         }
     }
 
-    fun prevLine() {
+    fun prevLine() = prevPage(1)
+
+    fun prevPage(pageSize: Int) {
+        val normalizedPageSize = pageSize.coerceIn(MIN_PAGE_SIZE, MAX_PAGE_SIZE)
         if (lineIndex > 0) {
-            lineIndex--
+            lineIndex = (lineIndex - normalizedPageSize).coerceAtLeast(0)
         } else if (chapterIndex > 0) {
             chapterIndex--
-            lineIndex = (chapters[chapterIndex].lines.size - 1).coerceAtLeast(0)
+            val previousChapterLineCount = chapters[chapterIndex].lines.size
+            lineIndex = (previousChapterLineCount - normalizedPageSize).coerceAtLeast(0)
         }
     }
 
@@ -62,5 +79,11 @@ class ReaderSession(
         this.chapterIndex = chapterIndex.coerceIn(this.chapters.indices)
         val lines = this.chapters[this.chapterIndex].lines
         this.lineIndex = if (lines.isEmpty()) 0 else lineIndex.coerceIn(lines.indices)
+    }
+
+    companion object {
+        private const val MIN_PAGE_SIZE = 1
+        private const val MAX_PAGE_SIZE = 20
+        private const val EMPTY_SLOT = "//"
     }
 }

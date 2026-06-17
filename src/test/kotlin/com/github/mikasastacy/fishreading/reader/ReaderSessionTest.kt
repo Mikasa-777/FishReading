@@ -69,4 +69,58 @@ class ReaderSessionTest {
         assertEquals(0, session.lineIndex)
         assertEquals("// a1", session.currentLine())
     }
+
+    @Test
+    fun `current page returns requested lines and pads without crossing chapter`() {
+        val session = ReaderSession(
+            listOf(
+                Chapter("一", listOf("// a1", "// a2")),
+                Chapter("二", listOf("// b1", "// b2"))
+            )
+        )
+
+        assertEquals(listOf("// a1", "// a2", "//"), session.currentPage(3))
+    }
+
+    @Test
+    fun `next page enters next chapter after short page at chapter end`() {
+        val session = ReaderSession(
+            listOf(
+                Chapter("一", listOf("// a1", "// a2", "// a3")),
+                Chapter("二", listOf("// b1", "// b2"))
+            ),
+            lineIndex = 2
+        )
+
+        assertEquals(listOf("// a3", "//"), session.currentPage(2))
+
+        session.nextPage(2)
+
+        assertEquals(1, session.chapterIndex)
+        assertEquals(0, session.lineIndex)
+        assertEquals(listOf("// b1", "// b2"), session.currentPage(2))
+    }
+
+    @Test
+    fun `previous page clamps to current chapter start before jumping chapters`() {
+        val session = ReaderSession(
+            listOf(
+                Chapter("一", listOf("// a1", "// a2", "// a3")),
+                Chapter("二", listOf("// b1", "// b2", "// b3"))
+            ),
+            chapterIndex = 1,
+            lineIndex = 1
+        )
+
+        session.prevPage(5)
+
+        assertEquals(1, session.chapterIndex)
+        assertEquals(0, session.lineIndex)
+
+        session.prevPage(5)
+
+        assertEquals(0, session.chapterIndex)
+        assertEquals(0, session.lineIndex)
+        assertEquals(listOf("// a1", "// a2", "// a3", "//", "//"), session.currentPage(5))
+    }
 }

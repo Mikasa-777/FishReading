@@ -37,6 +37,10 @@ class FishInlayService : Disposable {
     }
 
     fun updateInlay(editor: Editor, text: String) {
+        updateInlay(editor, listOf(text))
+    }
+
+    fun updateInlay(editor: Editor, lines: List<String>) {
         clearInlay()
         currentEditor = editor
         registerFocusListener(editor)
@@ -63,9 +67,11 @@ class FishInlayService : Disposable {
             true,
             true,
             0,
-            FishInlayRenderer(indentPrefix + text, attributes)
+            FishInlayRenderer(lines.map { indentPrefix + it }, attributes)
         )
     }
+
+    fun activeEditor(): Editor? = currentEditor?.takeIf { currentInlay?.isValid == true }
 
     fun clearInlay() {
         unregisterFocusListener()

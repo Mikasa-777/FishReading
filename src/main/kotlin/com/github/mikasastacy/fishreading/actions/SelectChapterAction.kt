@@ -23,7 +23,7 @@ class SelectChapterAction : AnAction() {
                 val chapterIndex = indexString.toIntOrNull()?.minus(1) ?: return@setItemChosenCallback
 
                 readerService.jumpToChapter(chapterIndex)
-                service<FishInlayService>().updateInlay(editor, readerService.getCurrentLine())
+                service<FishInlayService>().updateInlay(editor, readerService.getCurrentPage())
             }
             .setMovable(true)
             .setResizable(true)
