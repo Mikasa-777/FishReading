@@ -34,7 +34,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                             override fun actionPerformed(event: AnActionEvent) {
                                 val editor = event.getData(CommonDataKeys.EDITOR) ?: return
                                 readerService.loadBook(File(path))
-                                service<FishInlayService>().updateInlay(editor, readerService.getCurrentLine())
+                                service<FishInlayService>().updateInlay(editor, readerService.getCurrentPage())
                             }
                         })
                         return actions.toTypedArray()
@@ -47,17 +47,17 @@ class BookAndChapterMenuGroup : ActionGroup() {
                             if (state.lastActiveBookPath != path) {
                                 readerService.loadBook(File(path))
                             }
-                            service<FishInlayService>().updateInlay(editor, readerService.getCurrentLine())
+                            service<FishInlayService>().updateInlay(editor, readerService.getCurrentPage())
                         }
                     })
-
-                    actions.add(Separator.getInstance())
 
                     actions.add(object : AnAction("忘记本书") {
                         override fun actionPerformed(event: AnActionEvent) {
                             state.removeBook(path)
                         }
                     })
+
+                    actions.add(Separator.getInstance())
 
                     val chapterActions = progress.chapterTitles.mapIndexed { chapIndex, title ->
                         val isCurrentChapter = isCurrentBook && progress.chapterIdx == chapIndex
@@ -70,7 +70,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                                     readerService.loadBook(File(path))
                                 }
                                 readerService.jumpToChapter(chapIndex)
-                                service<FishInlayService>().updateInlay(editor, readerService.getCurrentLine())
+                                service<FishInlayService>().updateInlay(editor, readerService.getCurrentPage())
                             }
                         }
                     }

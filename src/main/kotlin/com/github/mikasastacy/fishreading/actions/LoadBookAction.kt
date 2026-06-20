@@ -12,10 +12,16 @@ import com.intellij.openapi.vfs.VfsUtilCore
 class LoadBookAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        val descriptor = FileChooserDescriptor(true, false, false, false, false, false).apply {
+        val descriptor = FileChooserDescriptor(true, true, false, false, false, false).apply {
             title = "选择你的摸鱼秘籍"
             description = "支持格式：.epub, .txt"
-            withFileFilter { it.extension?.lowercase() in supportedExtensions }
+            withFileFilter {
+                if (it.isDirectory) {
+                    it.name.lowercase().endsWith(".epub")
+                } else {
+                    it.extension?.lowercase() in supportedExtensions
+                }
+            }
         }
 
         val virtualFile = FileChooser.chooseFile(descriptor, project, null) ?: return

@@ -12,7 +12,7 @@ class NextLineAction : AnAction() {
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
         val readerService = service<FishReaderService>()
 
-        readerService.nextLine()
-        service<FishInlayService>().updateInlay(editor, readerService.getCurrentLine())
+        readerService.nextPage()
+        service<FishInlayService>().updateInlay(editor, readerService.getCurrentPage())
     }
 }

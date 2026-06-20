@@ -12,7 +12,7 @@ class PrevLineAction : AnAction() {
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return
         val readerService = service<FishReaderService>()
 
-        readerService.prevLine()
-        service<FishInlayService>().updateInlay(editor, readerService.getCurrentLine())
+        readerService.prevPage()
+        service<FishInlayService>().updateInlay(editor, readerService.getCurrentPage())
     }
 }
