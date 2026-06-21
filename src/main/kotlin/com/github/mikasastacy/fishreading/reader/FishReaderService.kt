@@ -1,6 +1,5 @@
 package com.github.mikasastacy.fishreading.reader
 
-import com.github.mikasastacy.fishreading.state.BookProgress
 import com.github.mikasastacy.fishreading.state.FishReadingPersistentState
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
@@ -96,17 +95,17 @@ class FishReaderService : Disposable {
     }
 
     private fun applyLoadedBook(file: File, newChapters: List<Chapter>) {
-        val state = service<FishReadingPersistentState>().state
-        state.lastActiveBookPath = file.absolutePath
+        val settings = service<FishReadingPersistentState>()
+        settings.setLastActiveBookPath(file.absolutePath)
 
-        val progress = state.getBookProgress(file.absolutePath, file.nameWithoutExtension)
-        state.updateChapterTitles(file.absolutePath, newChapters.map { it.title })
+        val progress = settings.rememberBook(file.absolutePath, file.nameWithoutExtension)
+        settings.updateChapterTitles(file.absolutePath, newChapters.map { it.title })
         session.replaceChapters(newChapters, progress.chapterIdx, progress.lineIdx)
         loadedBookPath = file.absolutePath
     }
 
     private fun ensureActiveBookLoaded(): Boolean {
-        val path = service<FishReadingPersistentState>().state.lastActiveBookPath ?: return false
+        val path = service<FishReadingPersistentState>().lastActiveBookPath ?: return false
         if (loadedBookPath == path) return true
 
         val file = File(path)
@@ -119,12 +118,12 @@ class FishReaderService : Disposable {
     }
 
     private fun saveProgress() {
-        val state = service<FishReadingPersistentState>().state
-        val path = state.lastActiveBookPath ?: return
-        state.saveProgress(path, session.chapterIndex, session.lineIndex)
+        val settings = service<FishReadingPersistentState>()
+        val path = settings.lastActiveBookPath ?: return
+        settings.saveProgress(path, session.chapterIndex, session.lineIndex)
     }
 
-    private fun readingLineCount(): Int = service<FishReadingPersistentState>().state.normalizedReadingLineCount()
+    private fun readingLineCount(): Int = service<FishReadingPersistentState>().normalizedReadingLineCount()
 
     override fun dispose() {}
 

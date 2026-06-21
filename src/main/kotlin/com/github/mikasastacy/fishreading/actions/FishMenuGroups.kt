@@ -14,15 +14,15 @@ import java.io.File
 class BookAndChapterMenuGroup : ActionGroup() {
 
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
-        val state = service<FishReadingPersistentState>().state
+        val settings = service<FishReadingPersistentState>()
         val readerService = service<FishReaderService>()
 
-        if (state.managedBooks.isEmpty()) {
+        if (settings.managedBooks.isEmpty()) {
             return EMPTY_ARRAY
         }
 
-        return state.managedBooks.map { (path, progress) ->
-            val isCurrentBook = state.lastActiveBookPath == path
+        return settings.managedBooks.map { (path, progress) ->
+            val isCurrentBook = settings.lastActiveBookPath == path
             val displayName = if (isCurrentBook) "✓ ${progress.bookName}" else progress.bookName
 
             object : ActionGroup(displayName, true) {
@@ -44,7 +44,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                     actions.add(object : AnAction(resumeText) {
                         override fun actionPerformed(event: AnActionEvent) {
                             val editor = event.getData(CommonDataKeys.EDITOR) ?: return
-                            if (state.lastActiveBookPath != path) {
+                            if (settings.lastActiveBookPath != path) {
                                 readerService.loadBook(File(path))
                             }
                             service<FishInlayService>().updateInlay(editor, readerService.getCurrentPage())
@@ -53,7 +53,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
 
                     actions.add(object : AnAction("忘记本书") {
                         override fun actionPerformed(event: AnActionEvent) {
-                            state.removeBook(path)
+                            settings.removeBook(path)
                         }
                     })
 
@@ -66,7 +66,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                         object : AnAction(chapterDisplayName) {
                             override fun actionPerformed(event: AnActionEvent) {
                                 val editor = event.getData(CommonDataKeys.EDITOR) ?: return
-                                if (state.lastActiveBookPath != path) {
+                                if (settings.lastActiveBookPath != path) {
                                     readerService.loadBook(File(path))
                                 }
                                 readerService.jumpToChapter(chapIndex)

@@ -33,20 +33,18 @@ class FishReaderServiceTest : BasePlatformTestCase() {
             """.trimIndent()
         )
         val path = file.absolutePath
-        val state = service<FishReadingPersistentState>().state
-        state.lastActiveBookPath = path
-        val progress = state.getBookProgress(path, file.nameWithoutExtension)
-        progress.chapterIdx = 0
-        progress.lineIdx = 0
-        state.updateChapterTitles(path, listOf("第一章 开始", "第二章 继续"))
+        val settings = service<FishReadingPersistentState>()
+        settings.setLastActiveBookPath(path)
+        settings.rememberBook(path, file.nameWithoutExtension)
+        settings.updateChapterTitles(path, listOf("第一章 开始", "第二章 继续"))
 
         val readerService = FishReaderService()
 
         readerService.nextLine()
 
         assertEquals("// 第二行。", readerService.getCurrentLine())
-        assertEquals(1, progress.chapterIdx)
-        assertEquals(0, progress.lineIdx)
+        assertEquals(1, settings.bookProgress(path)?.chapterIdx)
+        assertEquals(0, settings.bookProgress(path)?.lineIdx)
     }
 
     fun testRestoredProgressIsUsedAndSavedAfterMoving() {
@@ -61,12 +59,11 @@ class FishReaderServiceTest : BasePlatformTestCase() {
             """.trimIndent()
         )
         val path = file.absolutePath
-        val state = service<FishReadingPersistentState>().state
-        state.lastActiveBookPath = path
-        val progress = state.getBookProgress(path, file.nameWithoutExtension)
-        progress.chapterIdx = 1
-        progress.lineIdx = 0
-        state.updateChapterTitles(path, listOf("第一章 开始", "第二章 继续", "第三章 收尾"))
+        val settings = service<FishReadingPersistentState>()
+        settings.setLastActiveBookPath(path)
+        settings.rememberBook(path, file.nameWithoutExtension)
+        settings.saveProgress(path, chapterIdx = 1, lineIdx = 0)
+        settings.updateChapterTitles(path, listOf("第一章 开始", "第二章 继续", "第三章 收尾"))
 
         val readerService = FishReaderService()
 
@@ -74,8 +71,8 @@ class FishReaderServiceTest : BasePlatformTestCase() {
         readerService.nextLine()
 
         assertEquals("// 第三行。", readerService.getCurrentLine())
-        assertEquals(2, progress.chapterIdx)
-        assertEquals(0, progress.lineIdx)
+        assertEquals(2, settings.bookProgress(path)?.chapterIdx)
+        assertEquals(0, settings.bookProgress(path)?.lineIdx)
     }
 
     fun testChapterTitlesLoadPersistedActiveBook() {
@@ -88,12 +85,10 @@ class FishReaderServiceTest : BasePlatformTestCase() {
             """.trimIndent()
         )
         val path = file.absolutePath
-        val state = service<FishReadingPersistentState>().state
-        state.lastActiveBookPath = path
-        val progress = state.getBookProgress(path, file.nameWithoutExtension)
-        progress.chapterIdx = 0
-        progress.lineIdx = 0
-        state.updateChapterTitles(path, listOf("第一章 开始", "第二章 继续"))
+        val settings = service<FishReadingPersistentState>()
+        settings.setLastActiveBookPath(path)
+        settings.rememberBook(path, file.nameWithoutExtension)
+        settings.updateChapterTitles(path, listOf("第一章 开始", "第二章 继续"))
 
         val readerService = FishReaderService()
 
@@ -107,25 +102,24 @@ class FishReaderServiceTest : BasePlatformTestCase() {
         val missingPath = createTempFile(prefix = "missing-book", suffix = ".txt").toFile().apply {
             delete()
         }.absolutePath
-        val state = service<FishReadingPersistentState>().state
-        state.lastActiveBookPath = missingPath
-        val progress = state.getBookProgress(missingPath, "missing-book")
-        progress.chapterIdx = 3
-        progress.lineIdx = 7
-        state.updateChapterTitles(missingPath, listOf("旧目录"))
+        val settings = service<FishReadingPersistentState>()
+        settings.setLastActiveBookPath(missingPath)
+        settings.rememberBook(missingPath, "missing-book")
+        settings.saveProgress(missingPath, chapterIdx = 3, lineIdx = 7)
+        settings.updateChapterTitles(missingPath, listOf("旧目录"))
 
         val readerService = FishReaderService()
 
         readerService.nextLine()
         readerService.prevLine()
 
-        assertEquals(3, progress.chapterIdx)
-        assertEquals(7, progress.lineIdx)
+        assertEquals(3, settings.bookProgress(missingPath)?.chapterIdx)
+        assertEquals(7, settings.bookProgress(missingPath)?.lineIdx)
         assertEquals("// [FishReading] 请去 Tools 菜单加载或选择书籍", readerService.getCurrentLine())
     }
 
     fun testCurrentPagePadsMissingActiveBookToReadingLineCount() {
-        service<FishReadingPersistentState>().state.readingLineCount = 3
+        service<FishReadingPersistentState>().updateReadingLineCount(3)
         val readerService = FishReaderService()
 
         assertEquals(
@@ -149,13 +143,11 @@ class FishReaderServiceTest : BasePlatformTestCase() {
             """.trimIndent()
         )
         val path = file.absolutePath
-        val state = service<FishReadingPersistentState>().state
-        state.readingLineCount = 2
-        state.lastActiveBookPath = path
-        val progress = state.getBookProgress(path, file.nameWithoutExtension)
-        progress.chapterIdx = 0
-        progress.lineIdx = 0
-        state.updateChapterTitles(path, listOf("第一章 开始"))
+        val settings = service<FishReadingPersistentState>()
+        settings.updateReadingLineCount(2)
+        settings.setLastActiveBookPath(path)
+        settings.rememberBook(path, file.nameWithoutExtension)
+        settings.updateChapterTitles(path, listOf("第一章 开始"))
 
         val readerService = FishReaderService()
 
@@ -163,18 +155,18 @@ class FishReaderServiceTest : BasePlatformTestCase() {
         readerService.nextPage()
 
         assertEquals(listOf("// $thirdLine", "// $fourthLine"), readerService.getCurrentPage())
-        assertEquals(0, progress.chapterIdx)
-        assertEquals(2, progress.lineIdx)
+        assertEquals(0, settings.bookProgress(path)?.chapterIdx)
+        assertEquals(2, settings.bookProgress(path)?.lineIdx)
     }
 
     fun testReadingLineCountIsClampedToSupportedRange() {
-        val state = service<FishReadingPersistentState>().state
+        val settings = service<FishReadingPersistentState>()
 
-        state.readingLineCount = 0
-        assertEquals(1, state.normalizedReadingLineCount())
+        settings.loadState(FishReadingPersistentState.State(readingLineCount = 0))
+        assertEquals(1, settings.normalizedReadingLineCount())
 
-        state.readingLineCount = 21
-        assertEquals(20, state.normalizedReadingLineCount())
+        settings.loadState(FishReadingPersistentState.State(readingLineCount = 21))
+        assertEquals(20, settings.normalizedReadingLineCount())
     }
 
     fun testLoadBookAcceptsDirectoryEpubAndSavesAbsolutePathProgress() {
@@ -185,7 +177,7 @@ class FishReaderServiceTest : BasePlatformTestCase() {
 
         assertEquals("成功装载《book》", result)
         assertEquals("// First第一章正文。", readerService.getCurrentLine())
-        assertEquals(directory.absolutePath, service<FishReadingPersistentState>().state.lastActiveBookPath)
+        assertEquals(directory.absolutePath, service<FishReadingPersistentState>().lastActiveBookPath)
         assertEquals(listOf("[1] First", "[2] Second"), readerService.getChapterTitles())
     }
 

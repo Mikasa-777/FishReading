@@ -12,7 +12,7 @@ import com.intellij.openapi.ui.Messages
 
 class ReadingLineCountMenuGroup : ActionGroup("阅读行数", true) {
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
-        val lineCount = service<FishReadingPersistentState>().state.normalizedReadingLineCount()
+        val lineCount = service<FishReadingPersistentState>().normalizedReadingLineCount()
         val actions = PRESET_LINE_COUNTS.map { count ->
             SetReadingLineCountAction(count, labelForPreset(count, lineCount))
         }
@@ -30,13 +30,13 @@ class ReadingLineCountMenuGroup : ActionGroup("阅读行数", true) {
 
     private class CustomReadingLineCountAction(text: String) : AnAction(text) {
         override fun actionPerformed(e: AnActionEvent) {
-            val state = service<FishReadingPersistentState>().state
+            val settings = service<FishReadingPersistentState>()
             val input = Messages.showInputDialog(
                 e.project,
                 "请输入阅读行数 (1-20)",
                 "自定义阅读行数",
                 null,
-                state.normalizedReadingLineCount().toString(),
+                settings.normalizedReadingLineCount().toString(),
                 ReadingLineCountValidator
             ) ?: return
 
@@ -56,8 +56,7 @@ class ReadingLineCountMenuGroup : ActionGroup("阅读行数", true) {
         }
 
         private fun applyReadingLineCount(lineCount: Int) {
-            val state = service<FishReadingPersistentState>().state
-            state.updateReadingLineCount(lineCount)
+            service<FishReadingPersistentState>().updateReadingLineCount(lineCount)
 
             val inlayService = service<FishInlayService>()
             val editor = inlayService.activeEditor() ?: return

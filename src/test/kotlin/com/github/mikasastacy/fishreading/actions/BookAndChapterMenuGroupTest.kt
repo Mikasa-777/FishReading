@@ -23,13 +23,11 @@ class BookAndChapterMenuGroupTest : BasePlatformTestCase() {
     }
 
     fun testBookSubmenuSeparatesBuiltInActionsFromCachedChapters() {
-        val state = service<FishReadingPersistentState>().state
+        val settings = service<FishReadingPersistentState>()
         val path = "/books/book.txt"
-        state.lastActiveBookPath = path
-        state.getBookProgress(path, "book").apply {
-            chapterIdx = 0
-            chapterTitles = listOf("第一章", "第二章")
-        }
+        settings.setLastActiveBookPath(path)
+        settings.rememberBook(path, "book")
+        settings.updateChapterTitles(path, listOf("第一章", "第二章"))
 
         val submenu = BookAndChapterMenuGroup().getChildren(null).single() as ActionGroup
         val children = submenu.getChildren(null)
@@ -47,9 +45,9 @@ class BookAndChapterMenuGroupTest : BasePlatformTestCase() {
     }
 
     fun testUncachedBookSubmenuOnlyShowsLoadActionWithoutSeparator() {
-        val state = service<FishReadingPersistentState>().state
+        val settings = service<FishReadingPersistentState>()
         val path = "/books/book.txt"
-        state.getBookProgress(path, "book")
+        settings.rememberBook(path, "book")
 
         val submenu = BookAndChapterMenuGroup().getChildren(null).single() as ActionGroup
         val children = submenu.getChildren(null)
