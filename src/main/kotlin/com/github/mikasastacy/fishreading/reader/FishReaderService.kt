@@ -1,5 +1,6 @@
 package com.github.mikasastacy.fishreading.reader
 
+import com.github.mikasastacy.fishreading.i18n.MyMessageBundle
 import com.github.mikasastacy.fishreading.state.FishReadingPersistentState
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
@@ -62,7 +63,7 @@ class FishReaderService : Disposable {
         return when (val extension = file.extension.lowercase()) {
             "epub" -> loadEpub(file)
             "txt" -> loadTxt(file)
-            else -> "暂不支持扩展名为 .$extension 的书籍"
+            else -> MyMessageBundle.message("reader.load.unsupportedExtension", extension)
         }
     }
 
@@ -70,13 +71,13 @@ class FishReaderService : Disposable {
         return try {
             val newChapters = EpubParser.parse(file)
             if (newChapters.isEmpty()) {
-                "未发现有效文本"
+                MyMessageBundle.message("reader.load.noValidText")
             } else {
                 applyLoadedBook(file, newChapters)
-                "成功装载《${file.nameWithoutExtension}》"
+                MyMessageBundle.message("reader.load.success", file.nameWithoutExtension)
             }
         } catch (e: Exception) {
-            "加载失败: ${e.message}"
+            MyMessageBundle.message("reader.load.failure", e.message)
         }
     }
 
@@ -84,13 +85,13 @@ class FishReaderService : Disposable {
         return try {
             val newChapters = TxtParser.parse(file)
             if (newChapters.isEmpty()) {
-                "未发现有效文本"
+                MyMessageBundle.message("reader.load.noValidText")
             } else {
                 applyLoadedBook(file, newChapters)
-                "成功装载《${file.nameWithoutExtension}》"
+                MyMessageBundle.message("reader.load.success", file.nameWithoutExtension)
             }
         } catch (e: Exception) {
-            "加载失败: ${e.message}"
+            MyMessageBundle.message("reader.load.failure", e.message)
         }
     }
 

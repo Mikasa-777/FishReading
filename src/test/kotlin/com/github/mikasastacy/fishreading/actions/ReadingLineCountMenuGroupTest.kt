@@ -24,7 +24,7 @@ class ReadingLineCountMenuGroupTest : BasePlatformTestCase() {
         service<FishReadingPersistentState>().updateReadingLineCount(5)
 
         assertEquals(
-            listOf("1", "2", "✓ 5", "10", "自定义"),
+            listOf("1", "2", "✓ 5", "10", "Custom"),
             ReadingLineCountMenuGroup().getChildren(null).menuLabels()
         )
     }
@@ -34,14 +34,14 @@ class ReadingLineCountMenuGroupTest : BasePlatformTestCase() {
         settings.updateReadingLineCount(7)
 
         assertEquals(
-            listOf("1", "2", "5", "10", "✓ 自定义(7)"),
+            listOf("1", "2", "5", "10", "✓ Custom(7)"),
             ReadingLineCountMenuGroup().getChildren(null).menuLabels()
         )
 
         settings.updateReadingLineCount(10)
 
         assertEquals(
-            listOf("1", "2", "5", "✓ 10", "自定义"),
+            listOf("1", "2", "5", "✓ 10", "Custom"),
             ReadingLineCountMenuGroup().getChildren(null).menuLabels()
         )
     }

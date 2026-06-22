@@ -1,5 +1,6 @@
 package com.github.mikasastacy.fishreading.actions
 
+import com.github.mikasastacy.fishreading.i18n.MyMessageBundle
 import com.github.mikasastacy.fishreading.inlay.FishInlayService
 import com.github.mikasastacy.fishreading.reader.FishReaderService
 import com.intellij.openapi.actionSystem.AnAction
@@ -17,7 +18,7 @@ class SelectChapterAction : AnAction() {
 
         JBPopupFactory.getInstance()
             .createPopupChooserBuilder(titles)
-            .setTitle("选择摸鱼章节 (支持动态搜索)")
+            .setTitle(MyMessageBundle.message("popup.chapter.title"))
             .setItemChosenCallback { selectedValue ->
                 val indexString = selectedValue.substringAfter("[").substringBefore("]")
                 val chapterIndex = indexString.toIntOrNull()?.minus(1) ?: return@setItemChosenCallback

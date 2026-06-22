@@ -34,8 +34,8 @@ class BookAndChapterMenuGroupTest : BasePlatformTestCase() {
 
         assertEquals(
             listOf(
-                "继续阅读 (当前书籍)",
-                "忘记本书",
+                "Resume reading (current book)",
+                "Forget this book",
                 Separator::class.java.name,
                 "-> 第一章",
                 "第二章",
@@ -52,7 +52,7 @@ class BookAndChapterMenuGroupTest : BasePlatformTestCase() {
         val submenu = BookAndChapterMenuGroup().getChildren(null).single() as ActionGroup
         val children = submenu.getChildren(null)
 
-        assertEquals(listOf("尚未缓存目录，点击激活载入"), children.menuLabels())
+        assertEquals(listOf("No cached table of contents. Click to load it."), children.menuLabels())
     }
 
     private fun Array<AnAction>.menuLabels(): List<String> =

@@ -1,5 +1,6 @@
 package com.github.mikasastacy.fishreading.actions
 
+import com.github.mikasastacy.fishreading.i18n.MyMessageBundle
 import com.github.mikasastacy.fishreading.inlay.FishInlayService
 import com.github.mikasastacy.fishreading.reader.FishReaderService
 import com.github.mikasastacy.fishreading.state.FishReadingPersistentState
@@ -30,7 +31,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                     val actions = mutableListOf<AnAction>()
 
                     if (progress.chapterTitles.isEmpty()) {
-                        actions.add(object : AnAction("尚未缓存目录，点击激活载入") {
+                        actions.add(object : AnAction(MyMessageBundle.message("menu.book.load.uncached")) {
                             override fun actionPerformed(event: AnActionEvent) {
                                 val editor = event.getData(CommonDataKeys.EDITOR) ?: return
                                 readerService.loadBook(File(path))
@@ -40,7 +41,11 @@ class BookAndChapterMenuGroup : ActionGroup() {
                         return actions.toTypedArray()
                     }
 
-                    val resumeText = if (isCurrentBook) "继续阅读 (当前书籍)" else "继续阅读 (从上次进度恢复)"
+                    val resumeText = if (isCurrentBook) {
+                        MyMessageBundle.message("menu.book.resume.current")
+                    } else {
+                        MyMessageBundle.message("menu.book.resume.saved")
+                    }
                     actions.add(object : AnAction(resumeText) {
                         override fun actionPerformed(event: AnActionEvent) {
                             val editor = event.getData(CommonDataKeys.EDITOR) ?: return
@@ -51,7 +56,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                         }
                     })
 
-                    actions.add(object : AnAction("忘记本书") {
+                    actions.add(object : AnAction(MyMessageBundle.message("menu.book.forget")) {
                         override fun actionPerformed(event: AnActionEvent) {
                             settings.removeBook(path)
                         }

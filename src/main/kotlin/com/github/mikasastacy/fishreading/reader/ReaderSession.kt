@@ -1,12 +1,19 @@
 package com.github.mikasastacy.fishreading.reader
 
+import com.github.mikasastacy.fishreading.i18n.MyMessageBundle
+
 class ReaderSession(
     chapters: List<Chapter>,
     chapterIndex: Int = 0,
     lineIndex: Int = 0
 ) {
     var chapters: List<Chapter> = chapters.ifEmpty {
-        listOf(Chapter("欢迎使用", listOf("// [FishReading] 请去 Tools 菜单加载或选择书籍")))
+        listOf(
+            Chapter(
+                MyMessageBundle.message("reader.welcome.chapter"),
+                listOf(MyMessageBundle.message("reader.welcome.line"))
+            )
+        )
     }
         private set
 
@@ -21,8 +28,8 @@ class ReaderSession(
     }
 
     fun currentLine(): String {
-        val chapter = chapters.getOrNull(chapterIndex) ?: return "// 暂无内容"
-        return chapter.lines.getOrNull(lineIndex) ?: return "// 本章结束"
+        val chapter = chapters.getOrNull(chapterIndex) ?: return MyMessageBundle.message("reader.emptyContent")
+        return chapter.lines.getOrNull(lineIndex) ?: return MyMessageBundle.message("reader.endOfChapter")
     }
 
     fun currentPage(pageSize: Int): List<String> {

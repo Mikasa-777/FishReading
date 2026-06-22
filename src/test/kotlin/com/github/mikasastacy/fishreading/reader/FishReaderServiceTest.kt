@@ -115,7 +115,7 @@ class FishReaderServiceTest : BasePlatformTestCase() {
 
         assertEquals(3, settings.bookProgress(missingPath)?.chapterIdx)
         assertEquals(7, settings.bookProgress(missingPath)?.lineIdx)
-        assertEquals("// [FishReading] 请去 Tools 菜单加载或选择书籍", readerService.getCurrentLine())
+        assertEquals("// [FishReading] Load or select a book from the Tools menu", readerService.getCurrentLine())
     }
 
     fun testCurrentPagePadsMissingActiveBookToReadingLineCount() {
@@ -123,7 +123,7 @@ class FishReaderServiceTest : BasePlatformTestCase() {
         val readerService = FishReaderService()
 
         assertEquals(
-            listOf("// [FishReading] 请去 Tools 菜单加载或选择书籍", "//", "//"),
+            listOf("// [FishReading] Load or select a book from the Tools menu", "//", "//"),
             readerService.getCurrentPage()
         )
     }
@@ -175,7 +175,7 @@ class FishReaderServiceTest : BasePlatformTestCase() {
 
         val result = readerService.loadBook(directory)
 
-        assertEquals("成功装载《book》", result)
+        assertEquals("Loaded \"book\" successfully", result)
         assertEquals("// First第一章正文。", readerService.getCurrentLine())
         assertEquals(directory.absolutePath, service<FishReadingPersistentState>().lastActiveBookPath)
         assertEquals(listOf("[1] First", "[2] Second"), readerService.getChapterTitles())
