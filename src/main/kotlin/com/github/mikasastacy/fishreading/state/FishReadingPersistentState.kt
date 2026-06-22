@@ -6,10 +6,10 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 
 data class BookProgress(
-    @JvmField val chapterIdx: Int = 0,
-    @JvmField val lineIdx: Int = 0,
-    @JvmField val bookName: String = "",
-    @JvmField val chapterTitles: List<String> = emptyList()
+    @JvmField var chapterIdx: Int = 0,
+    @JvmField var lineIdx: Int = 0,
+    @JvmField var bookName: String = "",
+    @JvmField var chapterTitles: List<String> = emptyList()
 )
 
 @State(name = "FishReadingState", storages = [Storage("fish_reading_config.xml")])
@@ -75,9 +75,9 @@ class FishReadingPersistentState : SerializablePersistentStateComponent<FishRead
     }
 
     data class State(
-        @JvmField val lastActiveBookPath: String? = null,
-        @JvmField val readingLineCount: Int = DEFAULT_READING_LINE_COUNT,
-        @JvmField val managedBooks: Map<String, BookProgress> = emptyMap()
+        @JvmField var lastActiveBookPath: String? = null,
+        @JvmField var readingLineCount: Int = DEFAULT_READING_LINE_COUNT,
+        @JvmField var managedBooks: Map<String, BookProgress> = emptyMap()
     )
 
     companion object {
