@@ -58,7 +58,9 @@ class BookAndChapterMenuGroup : ActionGroup() {
 
                     actions.add(object : AnAction(MyMessageBundle.message("menu.book.forget")) {
                         override fun actionPerformed(event: AnActionEvent) {
-                            settings.removeBook(path)
+                            if (readerService.forgetBook(path)) {
+                                service<FishInlayService>().clearInlay()
+                            }
                         }
                     })
 

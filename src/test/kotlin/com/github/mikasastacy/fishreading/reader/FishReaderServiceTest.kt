@@ -181,6 +181,64 @@ class FishReaderServiceTest : BasePlatformTestCase() {
         assertEquals(listOf("[1] First", "[2] Second"), readerService.getChapterTitles())
     }
 
+    fun testForgetCurrentBookRemovesStateAndResetsCurrentPage() {
+        val file = createTxtFile(
+            """
+            第一章 开始
+            旧图书第一行。
+            旧图书第二行。
+            """.trimIndent()
+        )
+        val path = file.absolutePath
+        val settings = service<FishReadingPersistentState>()
+        settings.updateReadingLineCount(2)
+        val readerService = FishReaderService()
+
+        readerService.loadBook(file)
+        assertTrue(readerService.getCurrentPage().any { it.contains("旧图书第一行") })
+
+        val invalidated = readerService.forgetBook(path)
+
+        assertTrue(invalidated)
+        assertNull(settings.bookProgress(path))
+        assertNull(settings.lastActiveBookPath)
+        assertFalse(readerService.getCurrentPage().any { it.contains("旧图书") })
+        assertEquals(
+            listOf("// [FishReading] Load or select a book from the Tools menu", "//"),
+            readerService.getCurrentPage()
+        )
+
+        readerService.nextPage()
+
+        assertFalse(readerService.getCurrentPage().any { it.contains("旧图书") })
+        assertEquals(
+            listOf("// [FishReading] Load or select a book from the Tools menu", "//"),
+            readerService.getCurrentPage()
+        )
+    }
+
+    fun testForgetSavedNonCurrentBookKeepsCurrentPage() {
+        val currentFile = createTxtFile(
+            """
+            第一章 当前
+            当前图书第一行。
+            """.trimIndent()
+        )
+        val savedPath = "/books/saved.txt"
+        val settings = service<FishReadingPersistentState>()
+        val readerService = FishReaderService()
+
+        readerService.loadBook(currentFile)
+        settings.rememberBook(savedPath, "saved")
+
+        val invalidated = readerService.forgetBook(savedPath)
+
+        assertFalse(invalidated)
+        assertNull(settings.bookProgress(savedPath))
+        assertEquals(currentFile.absolutePath, settings.lastActiveBookPath)
+        assertEquals(listOf("// 当前图书第一行。"), readerService.getCurrentPage())
+    }
+
     private fun resetPersistentState() {
         service<FishReadingPersistentState>().loadState(FishReadingPersistentState.State())
     }

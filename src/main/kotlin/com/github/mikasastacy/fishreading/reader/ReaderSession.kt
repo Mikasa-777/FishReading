@@ -7,14 +7,7 @@ class ReaderSession(
     chapterIndex: Int = 0,
     lineIndex: Int = 0
 ) {
-    var chapters: List<Chapter> = chapters.ifEmpty {
-        listOf(
-            Chapter(
-                MyMessageBundle.message("reader.welcome.chapter"),
-                listOf(MyMessageBundle.message("reader.welcome.line"))
-            )
-        )
-    }
+    var chapters: List<Chapter> = chapters.ifEmpty { welcomeChapters() }
         private set
 
     var chapterIndex: Int = 0
@@ -82,6 +75,11 @@ class ReaderSession(
         restore(chapterIndex, lineIndex)
     }
 
+    fun resetToWelcome() {
+        chapters = welcomeChapters()
+        restore(0, 0)
+    }
+
     private fun restore(chapterIndex: Int, lineIndex: Int) {
         this.chapterIndex = chapterIndex.coerceIn(this.chapters.indices)
         val lines = this.chapters[this.chapterIndex].lines
@@ -92,5 +90,13 @@ class ReaderSession(
         private const val MIN_PAGE_SIZE = 1
         private const val MAX_PAGE_SIZE = 20
         private const val EMPTY_SLOT = "//"
+
+        private fun welcomeChapters(): List<Chapter> =
+            listOf(
+                Chapter(
+                    MyMessageBundle.message("reader.welcome.chapter"),
+                    listOf(MyMessageBundle.message("reader.welcome.line"))
+                )
+            )
     }
 }

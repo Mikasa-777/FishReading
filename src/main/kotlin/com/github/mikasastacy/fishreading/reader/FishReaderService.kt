@@ -95,6 +95,22 @@ class FishReaderService : Disposable {
         }
     }
 
+    fun forgetBook(filePath: String): Boolean {
+        val settings = service<FishReadingPersistentState>()
+        val wasActiveBook = settings.lastActiveBookPath == filePath
+        val wasLoadedBook = loadedBookPath == filePath
+
+        settings.removeBook(filePath)
+
+        if (!wasActiveBook && !wasLoadedBook) {
+            return false
+        }
+
+        loadedBookPath = null
+        session.resetToWelcome()
+        return true
+    }
+
     private fun applyLoadedBook(file: File, newChapters: List<Chapter>) {
         val settings = service<FishReadingPersistentState>()
         settings.setLastActiveBookPath(file.absolutePath)
