@@ -1,5 +1,6 @@
 package com.github.mikasastacy.fishreading.reader
 
+import com.github.mikasastacy.fishreading.i18n.MyMessageBundle
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.charset.CharacterCodingException
@@ -43,7 +44,7 @@ object TxtParser {
             val trimmedLine = line.trim()
             if (isChapterTitle(trimmedLine)) {
                 if (!foundChapterTitle && currentContent.isNotBlank()) {
-                    chapters.add("序章" to currentContent.toString())
+                    chapters.add(MyMessageBundle.message("reader.prologue") to currentContent.toString())
                 } else {
                     flushCurrent()
                 }

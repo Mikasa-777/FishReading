@@ -21,27 +21,27 @@ class ReadingLineCountMenuGroupTest : BasePlatformTestCase() {
     }
 
     fun testPresetLineCountIsMarkedWithCheck() {
-        service<FishReadingPersistentState>().state.readingLineCount = 5
+        service<FishReadingPersistentState>().updateReadingLineCount(5)
 
         assertEquals(
-            listOf("1", "2", "✓ 5", "10", "自定义"),
+            listOf("1", "2", "✓ 5", "10", "Custom"),
             ReadingLineCountMenuGroup().getChildren(null).menuLabels()
         )
     }
 
     fun testCustomLineCountShowsNumberOnlyWhenNotPreset() {
-        val state = service<FishReadingPersistentState>().state
-        state.readingLineCount = 7
+        val settings = service<FishReadingPersistentState>()
+        settings.updateReadingLineCount(7)
 
         assertEquals(
-            listOf("1", "2", "5", "10", "✓ 自定义(7)"),
+            listOf("1", "2", "5", "10", "✓ Custom(7)"),
             ReadingLineCountMenuGroup().getChildren(null).menuLabels()
         )
 
-        state.readingLineCount = 10
+        settings.updateReadingLineCount(10)
 
         assertEquals(
-            listOf("1", "2", "5", "✓ 10", "自定义"),
+            listOf("1", "2", "5", "✓ 10", "Custom"),
             ReadingLineCountMenuGroup().getChildren(null).menuLabels()
         )
     }

@@ -1,5 +1,6 @@
 package com.github.mikasastacy.fishreading.actions
 
+import com.github.mikasastacy.fishreading.i18n.MyMessageBundle
 import com.github.mikasastacy.fishreading.inlay.FishInlayService
 import com.github.mikasastacy.fishreading.reader.FishReaderService
 import com.github.mikasastacy.fishreading.state.FishReadingPersistentState
@@ -14,15 +15,15 @@ import java.io.File
 class BookAndChapterMenuGroup : ActionGroup() {
 
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
-        val state = service<FishReadingPersistentState>().state
+        val settings = service<FishReadingPersistentState>()
         val readerService = service<FishReaderService>()
 
-        if (state.managedBooks.isEmpty()) {
+        if (settings.managedBooks.isEmpty()) {
             return EMPTY_ARRAY
         }
 
-        return state.managedBooks.map { (path, progress) ->
-            val isCurrentBook = state.lastActiveBookPath == path
+        return settings.managedBooks.map { (path, progress) ->
+            val isCurrentBook = settings.lastActiveBookPath == path
             val displayName = if (isCurrentBook) "✓ ${progress.bookName}" else progress.bookName
 
             object : ActionGroup(displayName, true) {
@@ -30,7 +31,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                     val actions = mutableListOf<AnAction>()
 
                     if (progress.chapterTitles.isEmpty()) {
-                        actions.add(object : AnAction("尚未缓存目录，点击激活载入") {
+                        actions.add(object : AnAction(MyMessageBundle.message("menu.book.load.uncached")) {
                             override fun actionPerformed(event: AnActionEvent) {
                                 val editor = event.getData(CommonDataKeys.EDITOR) ?: return
                                 readerService.loadBook(File(path))
@@ -40,20 +41,26 @@ class BookAndChapterMenuGroup : ActionGroup() {
                         return actions.toTypedArray()
                     }
 
-                    val resumeText = if (isCurrentBook) "继续阅读 (当前书籍)" else "继续阅读 (从上次进度恢复)"
+                    val resumeText = if (isCurrentBook) {
+                        MyMessageBundle.message("menu.book.resume.current")
+                    } else {
+                        MyMessageBundle.message("menu.book.resume.saved")
+                    }
                     actions.add(object : AnAction(resumeText) {
                         override fun actionPerformed(event: AnActionEvent) {
                             val editor = event.getData(CommonDataKeys.EDITOR) ?: return
-                            if (state.lastActiveBookPath != path) {
+                            if (settings.lastActiveBookPath != path) {
                                 readerService.loadBook(File(path))
                             }
                             service<FishInlayService>().updateInlay(editor, readerService.getCurrentPage())
                         }
                     })
 
-                    actions.add(object : AnAction("忘记本书") {
+                    actions.add(object : AnAction(MyMessageBundle.message("menu.book.forget")) {
                         override fun actionPerformed(event: AnActionEvent) {
-                            state.removeBook(path)
+                            if (readerService.forgetBook(path)) {
+                                service<FishInlayService>().clearInlay()
+                            }
                         }
                     })
 
@@ -66,7 +73,7 @@ class BookAndChapterMenuGroup : ActionGroup() {
                         object : AnAction(chapterDisplayName) {
                             override fun actionPerformed(event: AnActionEvent) {
                                 val editor = event.getData(CommonDataKeys.EDITOR) ?: return
-                                if (state.lastActiveBookPath != path) {
+                                if (settings.lastActiveBookPath != path) {
                                     readerService.loadBook(File(path))
                                 }
                                 readerService.jumpToChapter(chapIndex)

@@ -1,81 +1,88 @@
 package com.github.mikasastacy.fishreading.state
 
-import com.intellij.openapi.components.PersistentStateComponent
+import com.intellij.openapi.components.SerializablePersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 
-class BookProgress {
-    var chapterIdx: Int = 0
-    var lineIdx: Int = 0
-    var bookName: String = ""
-    var chapterTitles: List<String> = arrayListOf()
-}
+data class BookProgress(
+    @JvmField var chapterIdx: Int = 0,
+    @JvmField var lineIdx: Int = 0,
+    @JvmField var bookName: String = "",
+    @JvmField var chapterTitles: List<String> = emptyList()
+)
 
 @State(name = "FishReadingState", storages = [Storage("fish_reading_config.xml")])
 @Service(Service.Level.APP)
-class FishReadingPersistentState : PersistentStateComponent<FishReadingPersistentState.State> {
+class FishReadingPersistentState : SerializablePersistentStateComponent<FishReadingPersistentState.State>(State()) {
 
-    class State {
-        var lastActiveBookPath: String? = null
-        var readingLineCount: Int = DEFAULT_READING_LINE_COUNT
-        var managedBooks: MutableMap<String, BookProgress> = mutableMapOf()
-            private set
+    val lastActiveBookPath: String?
+        get() = state.lastActiveBookPath
 
-        fun getBookProgress(filePath: String, bookName: String): BookProgress {
-            val existing = managedBooks[filePath]
-            if (existing != null) {
-                existing.bookName = bookName
-                return existing
-            }
-            val progress = BookProgress().apply { this.bookName = bookName }
-            managedBooks = managedBooks.toMutableMap().also { it[filePath] = progress }
-            return progress
+    val readingLineCount: Int
+        get() = state.readingLineCount
+
+    val managedBooks: Map<String, BookProgress>
+        get() = state.managedBooks
+
+    fun setLastActiveBookPath(filePath: String?) {
+        updateState { it.copy(lastActiveBookPath = filePath) }
+    }
+
+    fun rememberBook(filePath: String, bookName: String): BookProgress {
+        lateinit var progress: BookProgress
+        updateState {
+            val current = it.managedBooks[filePath]
+            progress = current?.copy(bookName = bookName) ?: BookProgress(bookName = bookName)
+            it.copy(managedBooks = it.managedBooks + (filePath to progress))
         }
+        return progress
+    }
 
-        fun updateChapterTitles(filePath: String, titles: List<String>) {
-            managedBooks[filePath]?.chapterTitles = titles
-            bumpMap()
-        }
+    fun bookProgress(filePath: String): BookProgress? = state.managedBooks[filePath]
 
-        fun saveProgress(filePath: String, chapterIdx: Int, lineIdx: Int) {
-            managedBooks[filePath]?.apply {
-                this.chapterIdx = chapterIdx
-                this.lineIdx = lineIdx
-            }
-            bumpMap()
-        }
+    fun updateChapterTitles(filePath: String, titles: List<String>) {
+        updateBookProgress(filePath) { it.copy(chapterTitles = titles) }
+    }
 
-        fun removeBook(filePath: String) {
-            if (filePath !in managedBooks) return
-            managedBooks = managedBooks.toMutableMap().also { it.remove(filePath) }
-            if (lastActiveBookPath == filePath) {
-                lastActiveBookPath = null
-            }
-        }
+    fun saveProgress(filePath: String, chapterIdx: Int, lineIdx: Int) {
+        updateBookProgress(filePath) { it.copy(chapterIdx = chapterIdx, lineIdx = lineIdx) }
+    }
 
-        fun normalizedReadingLineCount(): Int = readingLineCount.coerceIn(MIN_READING_LINE_COUNT, MAX_READING_LINE_COUNT)
-
-        fun updateReadingLineCount(lineCount: Int) {
-            readingLineCount = lineCount.coerceIn(MIN_READING_LINE_COUNT, MAX_READING_LINE_COUNT)
-        }
-
-        private fun bumpMap() {
-            managedBooks = managedBooks.toMutableMap()
-        }
-
-        companion object {
-            const val MIN_READING_LINE_COUNT = 1
-            const val MAX_READING_LINE_COUNT = 20
-            const val DEFAULT_READING_LINE_COUNT = 1
+    fun removeBook(filePath: String) {
+        if (filePath !in state.managedBooks) return
+        updateState {
+            it.copy(
+                lastActiveBookPath = if (it.lastActiveBookPath == filePath) null else it.lastActiveBookPath,
+                managedBooks = it.managedBooks - filePath
+            )
         }
     }
 
-    private var myState = State()
+    fun normalizedReadingLineCount(): Int = readingLineCount.coerceIn(MIN_READING_LINE_COUNT, MAX_READING_LINE_COUNT)
 
-    override fun getState(): State = myState
+    fun updateReadingLineCount(lineCount: Int) {
+        updateState {
+            it.copy(readingLineCount = lineCount.coerceIn(MIN_READING_LINE_COUNT, MAX_READING_LINE_COUNT))
+        }
+    }
 
-    override fun loadState(state: State) {
-        myState = state
+    private fun updateBookProgress(filePath: String, transform: (BookProgress) -> BookProgress) {
+        updateState {
+            val current = it.managedBooks[filePath] ?: return@updateState it
+            it.copy(managedBooks = it.managedBooks + (filePath to transform(current)))
+        }
+    }
+
+    data class State(
+        @JvmField var lastActiveBookPath: String? = null,
+        @JvmField var readingLineCount: Int = DEFAULT_READING_LINE_COUNT,
+        @JvmField var managedBooks: Map<String, BookProgress> = emptyMap()
+    )
+
+    companion object {
+        const val MIN_READING_LINE_COUNT = 1
+        const val MAX_READING_LINE_COUNT = 20
+        const val DEFAULT_READING_LINE_COUNT = 1
     }
 }

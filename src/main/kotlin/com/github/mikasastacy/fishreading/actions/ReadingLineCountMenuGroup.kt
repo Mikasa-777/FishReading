@@ -1,5 +1,6 @@
 package com.github.mikasastacy.fishreading.actions
 
+import com.github.mikasastacy.fishreading.i18n.MyMessageBundle
 import com.github.mikasastacy.fishreading.inlay.FishInlayService
 import com.github.mikasastacy.fishreading.reader.FishReaderService
 import com.github.mikasastacy.fishreading.state.FishReadingPersistentState
@@ -10,9 +11,12 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.ui.InputValidator
 import com.intellij.openapi.ui.Messages
 
-class ReadingLineCountMenuGroup : ActionGroup("阅读行数", true) {
+class ReadingLineCountMenuGroup : ActionGroup(
+    MyMessageBundle.message("group.com.github.mikasastacy.fishreading.ReadingLineCountMenu.text"),
+    true
+) {
     override fun getChildren(e: AnActionEvent?): Array<AnAction> {
-        val lineCount = service<FishReadingPersistentState>().state.normalizedReadingLineCount()
+        val lineCount = service<FishReadingPersistentState>().normalizedReadingLineCount()
         val actions = PRESET_LINE_COUNTS.map { count ->
             SetReadingLineCountAction(count, labelForPreset(count, lineCount))
         }
@@ -30,13 +34,13 @@ class ReadingLineCountMenuGroup : ActionGroup("阅读行数", true) {
 
     private class CustomReadingLineCountAction(text: String) : AnAction(text) {
         override fun actionPerformed(e: AnActionEvent) {
-            val state = service<FishReadingPersistentState>().state
+            val settings = service<FishReadingPersistentState>()
             val input = Messages.showInputDialog(
                 e.project,
-                "请输入阅读行数 (1-20)",
-                "自定义阅读行数",
+                MyMessageBundle.message("dialog.readingLineCount.message"),
+                MyMessageBundle.message("dialog.readingLineCount.title"),
                 null,
-                state.normalizedReadingLineCount().toString(),
+                settings.normalizedReadingLineCount().toString(),
                 ReadingLineCountValidator
             ) ?: return
 
@@ -51,13 +55,16 @@ class ReadingLineCountMenuGroup : ActionGroup("阅读行数", true) {
             if (count == current) "✓ $count" else count.toString()
 
         private fun labelForCustom(current: Int): String {
-            val text = if (current in PRESET_LINE_COUNTS) "自定义" else "自定义($current)"
+            val text = if (current in PRESET_LINE_COUNTS) {
+                MyMessageBundle.message("menu.readingLineCount.custom")
+            } else {
+                MyMessageBundle.message("menu.readingLineCount.custom.withCurrent", current)
+            }
             return if (current !in PRESET_LINE_COUNTS) "✓ $text" else text
         }
 
         private fun applyReadingLineCount(lineCount: Int) {
-            val state = service<FishReadingPersistentState>().state
-            state.updateReadingLineCount(lineCount)
+            service<FishReadingPersistentState>().updateReadingLineCount(lineCount)
 
             val inlayService = service<FishInlayService>()
             val editor = inlayService.activeEditor() ?: return

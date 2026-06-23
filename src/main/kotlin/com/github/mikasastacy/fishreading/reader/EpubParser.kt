@@ -1,5 +1,6 @@
 package com.github.mikasastacy.fishreading.reader
 
+import com.github.mikasastacy.fishreading.i18n.MyMessageBundle
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.io.ByteArrayInputStream
@@ -44,7 +45,7 @@ object EpubParser {
             val htmlContent = String(rawBytes, detectCharset(rawBytes))
             val chapterTitle = extractChapterTitle(htmlContent)
                 .takeUnless { it.isBlank() || it.lowercase().contains("untitled") }
-                ?: "第 ${anonymousChapterCount++} 部分"
+                ?: MyMessageBundle.message("reader.anonymousChapter", anonymousChapterCount++)
 
             val cleanText = cleanHtml(htmlContent)
             if (cleanText.isNotBlank()) {

@@ -123,4 +123,26 @@ class ReaderSessionTest {
         assertEquals(0, session.lineIndex)
         assertEquals(listOf("// a1", "// a2", "// a3", "//", "//"), session.currentPage(5))
     }
+
+    @Test
+    fun `resetToWelcome replaces current book with padded welcome page`() {
+        val session = ReaderSession(
+            listOf(
+                Chapter("一", listOf("// a1", "// a2")),
+                Chapter("二", listOf("// b1"))
+            ),
+            chapterIndex = 1,
+            lineIndex = 0
+        )
+
+        session.resetToWelcome()
+
+        assertEquals(0, session.chapterIndex)
+        assertEquals(0, session.lineIndex)
+        assertEquals("// [FishReading] Load or select a book from the Tools menu", session.currentLine())
+        assertEquals(
+            listOf("// [FishReading] Load or select a book from the Tools menu", "//"),
+            session.currentPage(2)
+        )
+    }
 }
