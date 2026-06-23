@@ -6,7 +6,7 @@ plugins {
     id("java") // Java support
     id("org.jetbrains.kotlin.jvm") version "2.1.20" // Kotlin support
     id("org.jetbrains.intellij.platform") version "2.10.2" // IntelliJ Platform Gradle Plugin
-    id("org.jetbrains.changelog") version "2.2.1" // Gradle Changelog Plugin
+    id("org.jetbrains.changelog") version "2.5.0" // Gradle Changelog Plugin
 }
 
 group = providers.gradleProperty("pluginGroup").get()
@@ -39,6 +39,8 @@ dependencies {
 
 // Configure IntelliJ Platform Gradle Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html
 intellijPlatform {
+    buildSearchableOptions = false
+
     pluginConfiguration {
         name = providers.gradleProperty("pluginName")
         version = providers.gradleProperty("pluginVersion")
