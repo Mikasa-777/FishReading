@@ -6,7 +6,7 @@
 
 ### Added
 
-- Introduced Gradle changelog integration and README-based plugin description extraction.
-- Initial FishReading IntelliJ IDEA plugin implementation.
-- EPUB and TXT book loading support.
-- Line-by-line reading actions and chapter navigation.
+- Read books directly inside IntelliJ IDEA without leaving the editor.
+- Import `.epub` and `.txt` books, with better support for common Chinese text encodings.
+- Move through reading text with keyboard shortcuts, and choose single-line or multi-line display.
+- Resume saved progress, switch between books, jump to chapters, or forget books from the IDE Tools menu.
