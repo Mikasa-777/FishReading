@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [1.0.0]
+
 ### Added
 
 - Read books directly inside IntelliJ IDEA without leaving the editor.
