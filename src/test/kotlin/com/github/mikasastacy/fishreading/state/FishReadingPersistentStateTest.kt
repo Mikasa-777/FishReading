@@ -52,6 +52,56 @@ class FishReadingPersistentStateTest : BasePlatformTestCase() {
         )
     }
 
+    fun testSaveTxtChapterRecognitionStoresRegexTitlesAndResetsProgress() {
+        val settings = service<FishReadingPersistentState>()
+        val path = "/books/book.txt"
+        settings.rememberBook(path, "book")
+        settings.saveProgress(path, chapterIdx = 2, lineIdx = 8)
+
+        settings.saveTxtChapterRecognition(
+            filePath = path,
+            titles = listOf("### 起始", "### 继续"),
+            chapterTitleRegex = """^###\s+.+$"""
+        )
+
+        assertEquals(
+            BookProgress(
+                chapterIdx = 0,
+                lineIdx = 0,
+                bookName = "book",
+                chapterTitles = listOf("### 起始", "### 继续"),
+                chapterTitleRegex = """^###\s+.+$"""
+            ),
+            settings.bookProgress(path)
+        )
+    }
+
+    fun testSaveTxtChapterRecognitionClearsCustomRegexWhenDefaultIsRequested() {
+        val settings = service<FishReadingPersistentState>()
+        val path = "/books/book.txt"
+        settings.rememberBook(path, "book")
+        settings.saveTxtChapterRecognition(
+            filePath = path,
+            titles = listOf("### 起始"),
+            chapterTitleRegex = """^###\s+.+$"""
+        )
+
+        settings.saveTxtChapterRecognition(
+            filePath = path,
+            titles = listOf("第一章 起始"),
+            chapterTitleRegex = null
+        )
+
+        assertEquals(
+            BookProgress(
+                bookName = "book",
+                chapterTitles = listOf("第一章 起始"),
+                chapterTitleRegex = null
+            ),
+            settings.bookProgress(path)
+        )
+    }
+
     fun testRemoveCurrentBookClearsActivePath() {
         val settings = service<FishReadingPersistentState>()
         val path = "/books/book.txt"
@@ -82,6 +132,11 @@ class FishReadingPersistentStateTest : BasePlatformTestCase() {
         settings.setLastActiveBookPath(path)
         settings.updateReadingLineCount(5)
         settings.rememberBook(path, "book")
+        settings.saveTxtChapterRecognition(
+            filePath = path,
+            titles = listOf("### 起始"),
+            chapterTitleRegex = """^###\s+.+$"""
+        )
 
         val xml = JDOMUtil.writeElement(
             XmlSerializer.serialize(settings.state)
@@ -94,6 +149,8 @@ class FishReadingPersistentStateTest : BasePlatformTestCase() {
         assertTrue(xml, xml.contains("managedBooks"))
         assertTrue(xml, xml.contains("bookName"))
         assertTrue(xml, xml.contains("book"))
+        assertTrue(xml, xml.contains("chapterTitleRegex"))
+        assertTrue(xml, xml.contains("^###\\s+.+$"))
 
         val restored = XmlSerializer.deserialize(
             XmlSerializer.serialize(settings.state),
@@ -102,7 +159,14 @@ class FishReadingPersistentStateTest : BasePlatformTestCase() {
 
         assertEquals(path, restored.lastActiveBookPath)
         assertEquals(5, restored.readingLineCount)
-        assertEquals(BookProgress(bookName = "book"), restored.managedBooks[path])
+        assertEquals(
+            BookProgress(
+                bookName = "book",
+                chapterTitles = listOf("### 起始"),
+                chapterTitleRegex = """^###\s+.+$"""
+            ),
+            restored.managedBooks[path]
+        )
     }
 
     private fun resetPersistentState() {

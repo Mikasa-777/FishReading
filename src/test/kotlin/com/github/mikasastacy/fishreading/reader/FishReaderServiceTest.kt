@@ -181,6 +181,132 @@ class FishReaderServiceTest : BasePlatformTestCase() {
         assertEquals(listOf("[1] First", "[2] Second"), readerService.getChapterTitles())
     }
 
+    fun testApplyTxtChapterTitleRegexSavesTitlesResetsProgressAndReloadsCurrentBook() {
+        val file = createTxtFile(
+            """
+            ### 起始
+            第一段内容。
+            ### 继续
+            第二段内容。
+            """.trimIndent()
+        )
+        val path = file.absolutePath
+        val settings = service<FishReadingPersistentState>()
+        val readerService = FishReaderService()
+        readerService.loadBook(file)
+        settings.saveProgress(path, chapterIdx = 0, lineIdx = 3)
+
+        val result = readerService.applyTxtChapterTitleRegex(file, """^###\s+.+$""")
+
+        assertEquals(TxtChapterRegexApplyResult.Success(chapterCount = 2, activeBookReloaded = true), result)
+        assertEquals(
+            listOf("### 起始", "### 继续"),
+            settings.bookProgress(path)?.chapterTitles
+        )
+        assertEquals("""^###\s+.+$""", settings.bookProgress(path)?.chapterTitleRegex)
+        assertEquals(0, settings.bookProgress(path)?.chapterIdx)
+        assertEquals(0, settings.bookProgress(path)?.lineIdx)
+        assertEquals("// 第一段内容。", readerService.getCurrentLine())
+    }
+
+    fun testApplyTxtChapterTitleRegexDoesNotOverwriteStateWhenNoTitleMatches() {
+        val file = createTxtFile(
+            """
+            ### 起始
+            第一段内容。
+            """.trimIndent()
+        )
+        val path = file.absolutePath
+        val settings = service<FishReadingPersistentState>()
+        settings.rememberBook(path, file.nameWithoutExtension)
+        settings.saveTxtChapterRecognition(path, listOf("旧目录"), """^###\s+.+$""")
+        settings.saveProgress(path, chapterIdx = 2, lineIdx = 4)
+        val previousProgress = settings.bookProgress(path)
+        val readerService = FishReaderService()
+
+        val result = readerService.applyTxtChapterTitleRegex(file, """^@@@\s+.+$""")
+
+        assertEquals(TxtChapterRegexApplyResult.NoMatchedTitle, result)
+        assertEquals(previousProgress, settings.bookProgress(path))
+    }
+
+    fun testApplyTxtChapterTitleRegexDoesNotOverwriteStateWhenNoReadableChapterRemains() {
+        val file = createTxtFile(
+            """
+            ### 起始
+            ### 继续
+            """.trimIndent()
+        )
+        val path = file.absolutePath
+        val settings = service<FishReadingPersistentState>()
+        settings.rememberBook(path, file.nameWithoutExtension)
+        settings.saveTxtChapterRecognition(path, listOf("旧目录"), """^###\s+.+$""")
+        settings.saveProgress(path, chapterIdx = 2, lineIdx = 4)
+        val previousProgress = settings.bookProgress(path)
+        val readerService = FishReaderService()
+
+        val result = readerService.applyTxtChapterTitleRegex(file, """^###\s+.+$""")
+
+        assertEquals(TxtChapterRegexApplyResult.NoValidContent, result)
+        assertEquals(previousProgress, settings.bookProgress(path))
+    }
+
+    fun testLoadTxtUsesPersistedChapterTitleRegex() {
+        val file = createTxtFile(
+            """
+            ### 起始
+            第一段内容。
+            """.trimIndent()
+        )
+        val path = file.absolutePath
+        val settings = service<FishReadingPersistentState>()
+        settings.setLastActiveBookPath(path)
+        settings.rememberBook(path, file.nameWithoutExtension)
+        settings.saveTxtChapterRecognition(path, listOf("### 起始"), """^###\s+.+$""")
+        val readerService = FishReaderService()
+
+        assertEquals("// 第一段内容。", readerService.getCurrentLine())
+        assertEquals(listOf("[1] ### 起始"), readerService.getChapterTitles())
+    }
+
+    fun testApplyTxtChapterTitleRegexForNonCurrentBookDoesNotSwitchActiveBook() {
+        val currentFile = createTxtFile(
+            """
+            第一章 当前
+            当前图书第一行。
+            """.trimIndent()
+        )
+        val savedFile = createTxtFile(
+            """
+            ### 起始
+            已保存图书第一行。
+            """.trimIndent()
+        )
+        val settings = service<FishReadingPersistentState>()
+        val readerService = FishReaderService()
+        readerService.loadBook(currentFile)
+        settings.rememberBook(savedFile.absolutePath, savedFile.nameWithoutExtension)
+
+        val result = readerService.applyTxtChapterTitleRegex(savedFile, """^###\s+.+$""")
+
+        assertEquals(TxtChapterRegexApplyResult.Success(chapterCount = 1, activeBookReloaded = false), result)
+        assertEquals(currentFile.absolutePath, settings.lastActiveBookPath)
+        assertEquals("// 当前图书第一行。", readerService.getCurrentLine())
+        assertEquals(listOf("### 起始"), settings.bookProgress(savedFile.absolutePath)?.chapterTitles)
+        assertEquals("""^###\s+.+$""", settings.bookProgress(savedFile.absolutePath)?.chapterTitleRegex)
+    }
+
+    fun testApplyTxtChapterTitleRegexReturnsInvalidRegexAndFileFailure() {
+        val file = createTxtFile("### 起始\n第一段内容。")
+        val missingFile = createTempFile(prefix = "missing-book", suffix = ".txt").toFile().apply {
+            delete()
+        }
+        val readerService = FishReaderService()
+
+        assertTrue(readerService.applyTxtChapterTitleRegex(file, "[") is TxtChapterRegexApplyResult.InvalidRegex)
+        assertTrue(readerService.applyTxtChapterTitleRegex(missingFile, """^###\s+.+$""") is TxtChapterRegexApplyResult.FileFailure)
+    }
+
     fun testForgetCurrentBookRemovesStateAndResetsCurrentPage() {
         val file = createTxtFile(
             """
