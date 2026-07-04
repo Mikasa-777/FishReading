@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Add custom TXT chapter title regular expressions, letting readers parse saved `.txt` books with their own chapter matching pattern.
+
 ## [1.0.0]
 
 ### Added
