@@ -46,6 +46,7 @@ class BookAndChapterMenuGroupTest : BasePlatformTestCase() {
         assertEquals(
             listOf(
                 "Resume reading (current book)",
+                "Custom chapter title regex",
                 "Forget this book",
                 Separator::class.java.name,
                 "-> 第一章",
@@ -57,13 +58,58 @@ class BookAndChapterMenuGroupTest : BasePlatformTestCase() {
 
     fun testUncachedBookSubmenuOnlyShowsLoadActionWithoutSeparator() {
         val settings = service<FishReadingPersistentState>()
-        val path = "/books/book.txt"
+        val path = "/books/book.epub"
         settings.rememberBook(path, "book")
 
         val submenu = BookAndChapterMenuGroup().getChildren(null).single() as ActionGroup
         val children = submenu.getChildren(null)
 
         assertEquals(listOf("No cached table of contents. Click to load it."), children.menuLabels())
+    }
+
+    fun testUncachedTxtBookSubmenuShowsLoadThenCustomRegexAction() {
+        val settings = service<FishReadingPersistentState>()
+        val path = "/books/book.txt"
+        settings.rememberBook(path, "book")
+
+        val submenu = BookAndChapterMenuGroup().getChildren(null).single() as ActionGroup
+        val children = submenu.getChildren(null)
+
+        assertEquals(
+            listOf(
+                "No cached table of contents. Click to load it.",
+                "Custom chapter title regex",
+            ),
+            children.menuLabels()
+        )
+    }
+
+    fun testEpubBookSubmenuDoesNotShowCustomRegexAction() {
+        val settings = service<FishReadingPersistentState>()
+        val cachedPath = "/books/cached.epub"
+        val uncachedPath = "/books/uncached.epub"
+        settings.setLastActiveBookPath(cachedPath)
+        settings.rememberBook(cachedPath, "cached")
+        settings.updateChapterTitles(cachedPath, listOf("First"))
+        settings.rememberBook(uncachedPath, "uncached")
+
+        val children = BookAndChapterMenuGroup().getChildren(null)
+        val cachedSubmenu = children[0] as ActionGroup
+        val uncachedSubmenu = children[1] as ActionGroup
+
+        assertEquals(
+            listOf(
+                "Resume reading (current book)",
+                "Forget this book",
+                Separator::class.java.name,
+                "-> First",
+            ),
+            cachedSubmenu.getChildren(null).menuLabels()
+        )
+        assertEquals(
+            listOf("No cached table of contents. Click to load it."),
+            uncachedSubmenu.getChildren(null).menuLabels()
+        )
     }
 
     fun testForgetCurrentBookClearsCurrentInlay() {

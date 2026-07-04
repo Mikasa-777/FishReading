@@ -9,7 +9,8 @@ data class BookProgress(
     @JvmField var chapterIdx: Int = 0,
     @JvmField var lineIdx: Int = 0,
     @JvmField var bookName: String = "",
-    @JvmField var chapterTitles: List<String> = emptyList()
+    @JvmField var chapterTitles: List<String> = emptyList(),
+    @JvmField var chapterTitleRegex: String? = null
 )
 
 @State(name = "FishReadingState", storages = [Storage("fish_reading_config.xml")])
@@ -43,6 +44,17 @@ class FishReadingPersistentState : SerializablePersistentStateComponent<FishRead
 
     fun updateChapterTitles(filePath: String, titles: List<String>) {
         updateBookProgress(filePath) { it.copy(chapterTitles = titles) }
+    }
+
+    fun saveTxtChapterRecognition(filePath: String, titles: List<String>, chapterTitleRegex: String?) {
+        updateBookProgress(filePath) {
+            it.copy(
+                chapterIdx = 0,
+                lineIdx = 0,
+                chapterTitles = titles,
+                chapterTitleRegex = chapterTitleRegex?.takeIf { regex -> regex.isNotBlank() }
+            )
+        }
     }
 
     fun saveProgress(filePath: String, chapterIdx: Int, lineIdx: Int) {

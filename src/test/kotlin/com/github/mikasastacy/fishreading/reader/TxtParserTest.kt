@@ -61,6 +61,83 @@ class TxtParserTest {
     }
 
     @Test
+    fun `parse result reports default matched chapter title count`() {
+        val file = createTxtFile(
+            """
+            第一章 风起
+            鱼来了。
+            第二章 继续
+            继续写代码。
+            """.trimIndent()
+        )
+
+        val result = TxtParser.parseWithResult(file, maxLineLength = 20)
+
+        assertEquals(2, result.matchedTitleCount)
+        assertEquals(listOf("第一章 风起", "第二章 继续"), result.chapters.map { it.title })
+    }
+
+    @Test
+    fun `parse result accepts custom chapter title regex`() {
+        val file = createTxtFile(
+            """
+            ### 起始
+            第一段内容。
+            ### 继续
+            第二段内容。
+            """.trimIndent()
+        )
+
+        val result = TxtParser.parseWithResult(file, maxLineLength = 20, chapterTitleRegex = """^###\s+.+$""")
+
+        assertEquals(2, result.matchedTitleCount)
+        assertEquals(listOf("### 起始", "### 继续"), result.chapters.map { it.title })
+        assertEquals(listOf("// 第一段内容。"), result.chapters.first().lines)
+    }
+
+    @Test
+    fun `parse result reports zero matches while keeping fallback chapter`() {
+        val file = createNamedTxtFile("plain-book", "没有目录。只有正文。")
+
+        val result = TxtParser.parseWithResult(file, maxLineLength = 20, chapterTitleRegex = """^###\s+.+$""")
+
+        assertEquals(0, result.matchedTitleCount)
+        assertEquals("plain-book", result.chapters.single().title)
+    }
+
+    @Test
+    fun `custom regex keeps prologue before first chapter title`() {
+        val file = createTxtFile(
+            """
+            楔子正文。
+            ### 起始
+            第一段内容。
+            """.trimIndent()
+        )
+
+        val result = TxtParser.parseWithResult(file, maxLineLength = 20, chapterTitleRegex = """^###\s+.+$""")
+
+        assertEquals(1, result.matchedTitleCount)
+        assertEquals(listOf("Prologue", "### 起始"), result.chapters.map { it.title })
+        assertEquals(listOf("// 楔子正文。"), result.chapters.first().lines)
+    }
+
+    @Test
+    fun `parse result returns no readable chapters when matched titles have no content`() {
+        val file = createTxtFile(
+            """
+            ### 起始
+            ### 继续
+            """.trimIndent()
+        )
+
+        val result = TxtParser.parseWithResult(file, maxLineLength = 20, chapterTitleRegex = """^###\s+.+$""")
+
+        assertEquals(2, result.matchedTitleCount)
+        assertTrue(result.chapters.isEmpty())
+    }
+
+    @Test
     fun `uses file name as single chapter title when no chapter title exists`() {
         val file = createNamedTxtFile("plain-book", "没有目录。只有正文。")
 
