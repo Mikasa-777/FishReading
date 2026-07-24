@@ -56,6 +56,7 @@ jobs:
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./build/distributions/content/*/*
+          retention-days: 7
 
   test:
     name: Test
@@ -91,6 +92,7 @@ jobs:
         with:
           name: tests-result
           path: ${{ github.workspace }}/build/reports/tests
+          retention-days: 7
 
   verify:
     name: Verify plugin
@@ -126,6 +128,7 @@ jobs:
         with:
           name: pluginVerifier-result
           path: ${{ github.workspace }}/build/reports/pluginVerifier
+          retention-days: 7
 
   releaseDraft:
     name: Release draft
